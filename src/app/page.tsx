@@ -1,95 +1,108 @@
-import Image from 'next/image'
+'use client'
+
+import { useEffect, useState } from 'react'
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import axios from 'axios';
+
 import styles from './page.module.css'
 
 export default function Home() {
+  
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const [isListening, setIsListening] = useState(false);
+
+  const [speechText, setSpeechText] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);;
+  const minute = 60 * 1000;
+  const [noteInterval, setNoteInterval] = useState(0.1 * minute); 
+
+  // update the transcript displayed on the page
+  useEffect(() => {
+    setSpeechText(transcript);
+  }, [transcript]);
+
+  // update the notes on interval
+  useEffect(() => {
+    if (isListening && lectureStartTime === null) {
+      setLectureStartTime(Date.now());
+      console.log(`lectureStartTime: ${lectureStartTime}`)
+    }
+
+    if (isListening) {
+      const interval = setInterval(async () => {
+        const currentTime = Date.now();
+        const startTime = lectureStartTime as number;
+        const timeElapsed = currentTime - startTime;
+
+        if (timeElapsed >= noteInterval) {
+          // const result = await axios.post('/api/openai', {
+          //   transcript: speechText,
+          //   previousNotes: notes,
+          // });
+          // setNotes(result.data.newNotes);
+          setNotes(`This is a new note taken at ${timeElapsed / minute} minutes since the start. The next note will be taken in ${noteInterval / minute} minutes at ${noteInterval / minute + timeElapsed / minute} minutes.`)
+        }
+      }, noteInterval);
+      
+      // cleanup
+      return () => clearInterval(interval);
+    }
+  }, [isListening]);
+
+  // handlers for starting and stopping the speech recognition and note taking
+  const startListening = () => {
+    // checks if browser supports speech recognition
+    if (browserSupportsSpeechRecognition) {
+      SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+      console.log('Speech recognition started.')
+      return true
+    } else {
+      console.log("Err: Browser doesn't support speech recognition.")
+      return false
+    }
+  }
+
+  const stopListening = () => {
+    SpeechRecognition.stopListening()
+    setLectureStartTime(null);
+    console.log('Speech recognition stopped.')
+    return false
+  }
+
+  const handleStartStop = () => {
+    if (isListening) {
+      setIsListening(stopListening())
+    } else {
+      setIsListening(startListening())
+    }
+  }
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
+      <div className={styles.textDisplay}>
+        Transcript:
         <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
+          {speechText}
         </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className={styles.textDisplay}>
+        Notes:
+        <p>
+          {notes}
+        </p>
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      <div className={styles.textButton} style={{right: "1rem"}} onClick={handleStartStop}>
+        {isListening ? 'Stop' : 'Start'}
       </div>
     </main>
   )
 }
+
+
+// TODO:
+// - add icon buttons (start/stop, take notes, copy notes, etc.)
+// - add time stamps to the transcript and notes, similar to zoom (line numbers esk thing)
+// - add database to store transcript (remove dependency on memory)
+// - add auth and user accounts and storing notes

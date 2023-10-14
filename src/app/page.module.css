@@ -1,37 +1,36 @@
 .main {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: row;
+  justify-content: space-evenly;
+  /* align-items: center; */
   padding: 6rem;
   min-height: 100vh;
 }
 
-.description {
-  display: inherit;
-  justify-content: inherit;
-  align-items: inherit;
+.textDisplay {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: left;
   font-size: 0.85rem;
   max-width: var(--max-width);
   width: 100%;
+  height: inherit;
+  max-height: 90vh;
   z-index: 2;
   font-family: var(--font-mono);
 }
 
-.description a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.description p {
-  position: relative;
+.textDisplay p {
   margin: 0;
   padding: 1rem;
+  margin: 0.5rem 1rem 0 0;
   background-color: rgba(var(--callout-rgb), 0.5);
   border: 1px solid rgba(var(--callout-border-rgb), 0.3);
   border-radius: var(--border-radius);
+  overflow-y: auto;
+  height: 100%;
+  min-height: 100%;
 }
 
 .code {
@@ -102,6 +101,14 @@
   position: absolute;
   filter: blur(45px);
   transform: translateZ(0);
+}
+
+.textButton {
+  font-size: 20px;
+  text-decoration: underline;
+  position: absolute;
+  bottom: 1rem;
+  cursor: pointer;
 }
 
 .logo {
