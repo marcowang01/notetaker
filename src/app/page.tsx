@@ -15,7 +15,8 @@ export default function Home() {
   const [notes, setNotes] = useState('');
 
   const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);;
-  const minute = 60 * 1000;
+  const second = 1000;
+  const minute = 60 * second;
   const [noteInterval, setNoteInterval] = useState(0.1 * minute); 
 
   // update the transcript displayed on the page
@@ -25,15 +26,12 @@ export default function Home() {
 
   // update the notes on interval
   useEffect(() => {
+    console.log(`isListening: ${isListening}`);
     if (isListening && lectureStartTime === null) {
-      setLectureStartTime(Date.now());
-      console.log(`lectureStartTime: ${lectureStartTime}`)
-    }
 
-    if (isListening) {
+      const startTime = Date.now();
       const interval = setInterval(async () => {
         const currentTime = Date.now();
-        const startTime = lectureStartTime as number;
         const timeElapsed = currentTime - startTime;
 
         if (timeElapsed >= noteInterval) {
@@ -42,11 +40,21 @@ export default function Home() {
           //   previousNotes: notes,
           // });
           // setNotes(result.data.newNotes);
-          setNotes(`This is a new note taken at ${timeElapsed / minute} minutes since the start. The next note will be taken in ${noteInterval / minute} minutes at ${noteInterval / minute + timeElapsed / minute} minutes.`)
+          setNotes(prev => {
+            return prev + '\n\n' + `New note taken at ${timeElapsed / second} sec since the start. The next note in ${noteInterval / second} sec at ${noteInterval / second + timeElapsed / second} sec.`;
+          })
         }
       }, noteInterval);
-      
-      // cleanup
+
+      setLectureStartTime(prev => {
+        if (prev === null) {
+          console.log(`lectureStartTime: ${startTime}`);
+          return startTime;
+        } else {
+          return prev;
+        }
+      });
+
       return () => clearInterval(interval);
     }
   }, [isListening]);
