@@ -1,56 +1,35 @@
-import OpenAI from "openai";
+import OpenAI from 'openai';
+import { OpenAIStream, StreamingTextResponse } from 'ai'
+ 
+export const runtime = 'edge'
+ 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+ 
+export async function POST(req: Request) {
+  // Extract the `messages` from the body of the request
+  const { messages } = await req.json()
 
-export async function GET(request: Request) {
-  const apiKey: string | undefined = process.env.OPENAI_API_KEY;
-  const headers: HeadersInit = new Headers({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
+  console.log("new call to things")
+  console.log(messages)
+ 
+  // Request the OpenAI API for the response based on the prompt
+  const response = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo-16k',
+    // model: 'gpt-4',
+    messages: messages,
+    stream: true,
+    // max_tokens: 500,
+    // temperature: 0.7,
+    // top_p: 1,
+    // frequency_penalty: 1,
+    // presence_penalty: 1,
   });
-
-  const body = JSON.stringify({
-    model: "gpt-3.5-turbo",
-    messages: [
-      {"role": "system", "content": "You are a helpful assistant for note-taking."},
-      {"role": "user", "content": "Generate partial notes for the lecture transcript."}
-    ],
-  });
-
-  const res = await fetch('https://api.openai.com/v1/engines/gpt-3.5-turbo/completions', {
-    method: 'POST',
-    headers,
-    body,
-  });
-
-  const data = await res.json();
-  return new Response(JSON.stringify(data), {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      // Add other CORS headers here
-    },
-  });
-}
-
-
-export async function POST(request: Request) {
-  const apiKey: string | undefined = process.env.YOUR_API_KEY;
-  const headers: HeadersInit = new Headers({
-    'Content-Type': 'application/json',
-  });
-  if (apiKey) {
-    headers.append('API-Key', apiKey);
-  }
-
-  const requestBody = await request.json();
-  const res = await fetch('your-api-endpoint', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(requestBody),
-  });
-  const data = await res.json();
-  return new Response(data, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      // Add other CORS headers here
-    },
-  });
+ 
+  // Convert the response into a friendly text-stream
+  const stream = OpenAIStream(response)
+ 
+  // Respond with the stream
+  return new StreamingTextResponse(stream)
 }
