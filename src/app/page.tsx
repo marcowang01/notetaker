@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCopy, faPlay, faPause, faEarListen } from '@fortawesome/free-solid-svg-icons';
 
 import styles from './page.module.css'
 
@@ -47,26 +49,6 @@ export default function Home() {
     api: '/api/openai',
     initialMessages: initialMessages,
    });
-
-  // Splits transcript based on nearest end of a sentence and 30 seconds interval.
-  // function splitTranscriptByInterval(transcript: string, startTime: number, lastPos: number) {
-  //   const segments: string[] = [];
-  //   const interval = 30000; // 30 seconds in milliseconds
-  //   let nextTime = startTime + interval;
-
-  //   const newTranscript = transcript.slice(lastPos); // Only consider new portion
-
-  //   newTranscript.split('. ').forEach((sentence: string, i: number, arr: string[]) => {
-  //     const currentTime = Date.now();
-  //     if (currentTime >= nextTime || i === arr.length - 1) {
-  //       segments.push(transcript.slice(lastPos, lastPos + sentence.length + 1)); 
-  //       lastPos += sentence.length + 1;
-  //       nextTime += interval;
-  //     }
-  //   });
-
-  //   return [segments, lastPos];
-  // }
 
   // update the transcript displayed on the page
   useEffect(() => {
@@ -162,9 +144,9 @@ export default function Home() {
     - Preserving a hierarchical format by using headings, subheadings, bullet points, and numbered lists where appropriate.
     - Using succinct language.
     - Emphasis on new formulas, examples, or references, marking them distinctively.
-    - Only present new or fully revised sections. Ensure integration is smooth and free of redundancy.
+    - Only present new or fully revised sections. Ensure integration is smooth and free of redundancy. Do not make additional comments on unchanged content.
     - Indication of revisions to previous sections, without regenerating the entire section.
-    
+
     ---
     
     **Lecture Notes Generated so far**:
@@ -204,25 +186,42 @@ export default function Home() {
     }
   }
 
+  const handleCopy = (content: string) => {
+    navigator.clipboard.writeText(content).then(function() {
+      console.log('Content copied to clipboard successfully!');
+    }, function(err) {
+      console.error('Could not copy content: ', err);
+    });
+  }
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
         <div className={styles.textDisplay}>
           Transcript:
+          <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
+            <FontAwesomeIcon icon={faCopy} />
+          </div>
           <p>
             {displayTranscript}
           </p>
         </div>
         <div className={styles.textDisplay}>
           Notes:
+          <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
+            <FontAwesomeIcon icon={faCopy} />
+          </div>
           <p>
             {displayNotes}
           </p>
         </div>
       </main>
       <div className={styles.navbar}>
-        <div className={`${styles.navItem} ${styles.textButton}`} style={{right: "1rem"}} onClick={handleStartStop}>
-          {isListening ? 'Stop' : 'Start'}
+        <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleStartStop}>
+          {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
+        </div>
+        <div className={`${styles.navItem}`}>
+          <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
         </div>
       </div>
     </div>
@@ -231,11 +230,9 @@ export default function Home() {
 
 
 // TODO:
-// - add icon buttons (start/stop, take notes, copy notes, etc.)
+// - textbox for input class, when next note is, generate notes now
 // - adjust propmts to generate diffs and not full notes to reduce token counts
-// - add time stamps to the transcript and notes, similar to zoom (line numbers esk thing)
 // - add database to store transcript (remove dependency on memory)
 // - add auth and user accounts and storing notes
-// - textbox for input class, when next note is, generate notes now
 // - add time stamps to transcript on display
 // - on stop, generate notes for the rest of the transcript, and then takes all the notes and generates a file from gpt-4 
