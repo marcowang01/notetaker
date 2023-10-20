@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, ChangeEvent } from 'react'
 import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faEdit } from '@fortawesome/free-solid-svg-icons';
 
 import styles from './page.module.css'
 
@@ -25,12 +25,12 @@ export default function Home() {
   const [displayNotes, setDisplayNotes] = useState('');
   const [displayTranscript, setDisplayTranscript] = useState('');
 
-  const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);;
+  const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   const second = 1000;
   const minute = 60 * second;
-  const noteInterval = 0.5 * minute; 
+  const noteInterval = 3 * minute; 
   const intervalRef = useRef<NodeJS.Timeout | null>(null); // prevent multiple intervals from being set
-  const topic = "Intermediate Microeconomics";
+  const [topic, setTopic] = useState('');
 
   const initialMessages : Message[] = [
     {
@@ -41,6 +41,7 @@ export default function Home() {
       You will be given transcript segments and existing lecture notes, synthesize only the new sections or those requiring updates. Adhere to a clear structure, and ensure conciseness. Do not regenerate content that remains unchanged.
       Stick to a structured, concise format. Do NOT rehash unchanged content, instead indicate the revisions to seamlessly integrate with existing notes. Your goal is streamlined efficiency.
       This revision prioritizes efficiency, focusing on generating only the necessary content.
+      Note that the transcription may mishear technical terms or miss words entirely. You may need to correct the transcript to ensure the notes are accurate.
       `
     }
   ];
@@ -138,7 +139,7 @@ export default function Home() {
   // create prompt using transcript and notes
   const createPrompt = (transcript: string, notes: string, transcriptInterval: number, topic: string) => {
     return `
-    Given a segment of the transcript from a lecture on ${topic} and the existing lecture notes generated previously, produce only the new sections or updates required. Concentrate on:
+    Given the most recent segment of the transcript from a lecture on ${topic} and the existing lecture notes generated previously, produce only the new sections or updates required. Concentrate on:
 
     - Incorporating new main ideas and essential details.
     - Preserving a hierarchical format by using headings, subheadings, bullet points, and numbered lists where appropriate.
@@ -154,12 +155,19 @@ export default function Home() {
     ---
     
     **New Transcript Segment**:
-    ${transcript}
+    ${transcript || 'No new transcript segment.'}
+
+    ---
     `
   }
 
   // handlers for starting and stopping the speech recognition and note taking
   const startListening = () => {
+    // checks if topic is empty
+    if (topic.length === 0) {
+      console.log("Err: Topic is empty.")
+      return false
+    }
     // checks if browser supports speech recognition
     if (browserSupportsSpeechRecognition) {
       SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
@@ -194,6 +202,11 @@ export default function Home() {
     });
   }
 
+  // Handler for input changes
+  const handleTopicInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setTopic(e.target.value);
+  };
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
@@ -206,7 +219,7 @@ export default function Home() {
             {displayTranscript}
           </p>
         </div>
-        <div className={styles.textDisplay}>
+        <div className={styles.textDisplay}> 
           Notes:
           <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
             <FontAwesomeIcon icon={faCopy} />
@@ -217,8 +230,18 @@ export default function Home() {
         </div>
       </main>
       <div className={styles.navbar}>
+        <input 
+          className={styles.navItem}
+          placeholder='Enter topic here'
+          value={topic}
+          onChange={handleTopicInputChange}
+          disabled={isListening}
+        />
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleStartStop}>
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
+        </div>
+        <div className={`${styles.navItem} ${styles.textButton}`}>
+          <FontAwesomeIcon icon={faEdit} />
         </div>
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
@@ -230,9 +253,17 @@ export default function Home() {
 
 
 // TODO:
-// - textbox for input class, when next note is, generate notes now
+// - textbox for input topic, and generate notes immediately 
+// - automatically summarize transcript on token count exceed limit (should keep a running summary regardless of notes generation) can trim summary for shorter context
+//    - prompt: summary + recent transcript + existing notes ==> a set of updated notes
 // - adjust propmts to generate diffs and not full notes to reduce token counts
 // - add database to store transcript (remove dependency on memory)
 // - add auth and user accounts and storing notes
 // - add time stamps to transcript on display
 // - on stop, generate notes for the rest of the transcript, and then takes all the notes and generates a file from gpt-4 
+// - add ability to save notes to file
+// - main feature: ask what is going on (highlight terms that can be expanded on, use guidance or function calling) [use a different model for this?]
+// - at the end, use GPT-3.5 to generate a summary ==> GPT 4 to format into notes (contains definitions, key concepts and examples)
+// - fine tune llama on textbook? 
+// UI: auto scroll, add topic input box, fix transcript timestamp new line, download button for notes and running summary
+// drop down for save and copy options
