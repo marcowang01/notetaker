@@ -303,18 +303,21 @@ export default function Home() {
 
 
 // TODO:
-// - textbox for input topic, and generate notes immediately 
-// - automatically summarize transcript on token count exceed limit (should keep a running summary regardless of notes generation) can trim summary for shorter context
-//    - prompt: summary + recent transcript + existing notes ==> a set of updated notes
-// - adjust propmts to generate diffs and not full notes to reduce token counts
-// - add database to store transcript (remove dependency on memory)
+// sr improvements:
+// - use deepgram 
+// - generate vocab list from input topic
+
+// notes improvements:
+// - generate running summary of transcript
+// - mini chat/easy buttons for generating instant notes
+// - pipeline to polish notes at the end (GPT-4? Guidance?)
+
+// user + content management:
 // - add auth and user accounts and storing notes
-// - on stop, generate notes for the rest of the transcript, and then takes all the notes and generates a file from gpt-4 
-// - add ability to save notes to file
-// - main feature: ask what is going on (highlight terms that can be expanded on, use guidance or function calling) [use a different model for this?]
-// - at the end, use GPT-3.5 to generate a summary ==> GPT 4 to format into notes (contains definitions, key concepts and examples)
-// - fine tune llama on textbook? 
-// UI: auto scroll, add topic input box, fix transcript timestamp new line, download button for notes and running summary
-// shadcn ui
-// cannot make a call to open ai if notes are currently generating
-// generate a list of words for grammar
+// - add database to store summary
+// - add database to store topic and vocab list (per user)
+
+// UI improvements:
+// - use shadcn ui
+// - auto scroll
+// - side bar
