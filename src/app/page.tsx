@@ -5,9 +5,10 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faEdit, faClock } from '@fortawesome/free-solid-svg-icons';
 
 import styles from './page.module.css'
+import next from 'next';
 
 export default function Home() {
   
@@ -24,13 +25,15 @@ export default function Home() {
   const notesRef = useRef('');
   const [displayNotes, setDisplayNotes] = useState('');
   const [displayTranscript, setDisplayTranscript] = useState('');
+  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false); // prevent multiple notes from being generated at once
 
   const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   const second = 1000;
   const minute = 60 * second;
-  const noteInterval = 3 * minute; 
+  const noteInterval = 0.5 * minute; 
   const intervalRef = useRef<NodeJS.Timeout | null>(null); // prevent multiple intervals from being set
   const [topic, setTopic] = useState('');
+  const [nextNoteTime, setNextNoteTime] = useState(0); // time of next note to be generated [in milliseconds
 
   const initialMessages : Message[] = [
     {
@@ -46,9 +49,15 @@ export default function Home() {
     }
   ];
 
+  const onFinish = () => {
+    console.log('Chat generation finished.');
+    setIsGeneratingNotes(false);
+  }
+
   const { messages, append } = useChat({ 
     api: '/api/openai',
     initialMessages: initialMessages,
+    onFinish: onFinish
    });
 
   // update the transcript displayed on the page
@@ -66,7 +75,7 @@ export default function Home() {
         const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
         lastTranscriptIndex.current = transcriptRef.current.length;
         setDisplayTranscript(prevDisplay => {
-          return prevDisplay + newTranscriptSegment + '\n' + timeString + '\n';
+          return prevDisplay + newTranscriptSegment + '\n' + timeString + ' ';
         });
       } else {
         const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
@@ -97,25 +106,39 @@ export default function Home() {
     if (intervalRef.current) return;
 
     if (isListening && lectureStartTime === null) {
-      
       const startTime = Date.now();
-      intervalRef.current = setInterval(async () => {
-        const currentTime = Date.now();
-        const timeElapsed = currentTime - startTime;
+      setNextNoteTime(startTime + noteInterval);
 
+      intervalRef.current = setInterval(async () => {
+        if (isGeneratingNotes) {
+          console.log('Notes are already being generated. Waiting for next interval.');
+          return
+        }
+
+        setIsGeneratingNotes(true);
+        console.log('Generating notes...');
         const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
+        // backtrack to include the ~1000 tokens before the current transcript index
         transcriptIndexRef.current = Math.max(partialTranscript.length - transcriptBacktrackIndex, 0);
+        const newMessage : CreateMessage = {
+          role: 'user',
+          content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
+        };
+        // immediately append the message to the chat and trigger the assistant to respond
+        append(newMessage);
+
+        const currentTime = Date.now();
+        setNextNoteTime(prev => {
+          if (prev === 0) {
+            return currentTime + noteInterval;
+          } else {
+            return prev + noteInterval;
+          }
+        });
 
         // console.log(`notes: ${notesRef.current}`);
         // console.log(`transcript: ${partialTranscript}`);
 
-        if (timeElapsed >= noteInterval) {
-          const newMessage : CreateMessage = {
-            role: 'user',
-            content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
-          };
-          append(newMessage);
-        }
       }, noteInterval);
 
       setLectureStartTime(prev => {
@@ -158,6 +181,8 @@ export default function Home() {
     ${transcript || 'No new transcript segment.'}
 
     ---
+
+    (continue to generate new notes here)
     `
   }
 
@@ -207,6 +232,27 @@ export default function Home() {
     setTopic(e.target.value);
   };
 
+  const handleGenerateNotes = () => {
+    
+    if (isGeneratingNotes) {
+      console.log('Notes are already being generated.');
+      return 
+    }
+    setIsGeneratingNotes(true);
+    console.log('Generating notes...');
+    const currentTime = Date.now();
+    
+    const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
+    // backtrack to include the ~1000 tokens before the current transcript index
+    transcriptIndexRef.current = Math.max(partialTranscript.length - transcriptBacktrackIndex, 0);
+    const newMessage : CreateMessage = {
+      role: 'user',
+      content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
+    };
+    // immediately append the message to the chat and trigger the assistant to respond
+    append(newMessage);
+  }
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
@@ -241,7 +287,11 @@ export default function Home() {
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
-          <FontAwesomeIcon icon={faEdit} />
+          <FontAwesomeIcon icon={faEdit} onClick={handleGenerateNotes}/>
+        </div>
+        <div className={`${styles.navItem}`}>
+          {/* display nextNote time in a human readable format HH:MM:SS in current time zone */}
+          <FontAwesomeIcon icon={faClock} />{`: ${new Date(nextNoteTime).toLocaleTimeString()}`}
         </div>
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
@@ -259,11 +309,12 @@ export default function Home() {
 // - adjust propmts to generate diffs and not full notes to reduce token counts
 // - add database to store transcript (remove dependency on memory)
 // - add auth and user accounts and storing notes
-// - add time stamps to transcript on display
 // - on stop, generate notes for the rest of the transcript, and then takes all the notes and generates a file from gpt-4 
 // - add ability to save notes to file
 // - main feature: ask what is going on (highlight terms that can be expanded on, use guidance or function calling) [use a different model for this?]
 // - at the end, use GPT-3.5 to generate a summary ==> GPT 4 to format into notes (contains definitions, key concepts and examples)
 // - fine tune llama on textbook? 
 // UI: auto scroll, add topic input box, fix transcript timestamp new line, download button for notes and running summary
-// drop down for save and copy options
+// shadcn ui
+// cannot make a call to open ai if notes are currently generating
+// generate a list of words for grammar
