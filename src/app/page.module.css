@@ -1,8 +1,9 @@
-.container {
+.mainContainer {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   height: 100vh;
+  overflow: hidden; 
 }
 
 .navbar {
@@ -28,35 +29,44 @@
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
-  /* align-items: center; */
+  align-items: center;
   padding: 5rem 6rem;
   flex-grow: 1;
   max-height: 95vh;
+}
+
+.LRContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 100%;
+  width: 100%;
 }
 
 .textDisplay {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: left;
+  align-items: flex-start; /* Change from 'left' to 'flex-start' */
   font-size: 0.85rem;
   max-width: var(--max-width);
   width: 100%;
   z-index: 2;
   font-family: var(--font-mono);
-  height: 100%;
   position: relative;
+  height: 100%; /* Adjust based on your structure and padding/margins */
+  overflow: hidden; /* Hide overflow */
 }
 
 .textDisplay p {
-  margin: 0;
-  padding: 1rem;
-  margin: 0.5rem 1rem 0 0;
+  padding: 0 1rem;
+  margin: 0.25rem 1rem 0.5rem 0;
   background-color: rgba(var(--callout-rgb), 0.5);
   border: 1px solid rgba(var(--callout-border-rgb), 0.3);
   border-radius: var(--border-radius);
-  overflow-y: auto;
-  height: 100%;
+  height: 100%; /* Adjust this value to make space for the title and other elements inside .textDisplay */
+  width: calc(100% - 1rem);
+  overflow-y: auto; 
   white-space: pre-line;
 }
 

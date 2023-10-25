@@ -30,7 +30,7 @@ export default function Home() {
   const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   const second = 1000;
   const minute = 60 * second;
-  const noteInterval = 0.5 * minute; 
+  const noteInterval = 3 * minute; 
   const intervalRef = useRef<NodeJS.Timeout | null>(null); // prevent multiple intervals from being set
   const [topic, setTopic] = useState('');
   const [nextNoteTime, setNextNoteTime] = useState(0); // time of next note to be generated [in milliseconds
@@ -48,6 +48,18 @@ export default function Home() {
       `
     }
   ];
+
+  const testMessage = `
+  She left her job at the Fed. She was not renewed when she was out, which was a travesty. Fantastic job. You may know why she wasn't renewed. The president at the time felt that she was too short to be the head of the Federal Reserve. More on that soon. Alright, so the Fed policymakers, they want a level of output and they want inflation rate and all. We talked about the TH section.
+(00:33) And. And so we talked about like a loss. The nerdy thing then these slides are bunch of maths would look at it basically. If we're here. That's zero. That's the best we can do is to zero. If we're on for that, it's a negative. So we're losing it. We're offense. It's a loss function. The best we can do is no loss.
+(01:00) If we're somewhere off. Better value. Our loss function gets worse the farther we get from that point. So that's the best. That's the happiest we can be. And they were less happy, less happy, less happy. And generally going to go with the balance loss function. Being off on inflation as much as we hate being offline. That's just kind of math for circle is much easier than the math for other shapes.
+(01:31) That's why. The great economist.  
+  `
+  useEffect(() => {
+    setDisplayTranscript(testMessage);
+    setDisplayNotes(testMessage);
+  }, []);
+  
 
   const onFinish = () => {
     console.log('Chat generation finished.');
@@ -254,25 +266,39 @@ export default function Home() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.mainContainer}>
       <main className={styles.main}>
-        <div className={styles.textDisplay}>
-          Transcript:
-          <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
-            <FontAwesomeIcon icon={faCopy} />
+        <div className={styles.LRContainer}>
+          <div className={styles.textDisplay}>
+            Transcript:
+            <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
+              <FontAwesomeIcon icon={faCopy} />
+            </div>
+            <p>
+              {displayTranscript}
+            </p>
           </div>
-          <p>
-            {displayTranscript}
-          </p>
+          <div className={styles.textDisplay}>
+            Running Summary:
+            <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
+              <FontAwesomeIcon icon={faCopy} />
+            </div>
+            <p>
+              {displayTranscript}
+            </p>
+          </div>
         </div>
-        <div className={styles.textDisplay}> 
-          Notes:
-          <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
-            <FontAwesomeIcon icon={faCopy} />
+        <div className={styles.LRContainer}>
+          <div className={styles.textDisplay}> 
+            Notes:
+            <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
+              <FontAwesomeIcon icon={faCopy} />
+            </div>
+            <p>
+              {/* {displayNotes} */}
+              {/* {displayTranscript} */}
+            </p>
           </div>
-          <p>
-            {displayNotes}
-          </p>
         </div>
       </main>
       <div className={styles.navbar}>
@@ -311,9 +337,14 @@ export default function Home() {
 // - generate running summary of transcript
 // - mini chat/easy buttons for generating instant notes
 // - pipeline to polish notes at the end (GPT-4? Guidance?)
+// llamaindex: https://www.llamaindex.ai/
+// private and local gpt, llama cpp and modal
+// mistral 7b dolphin: https://huggingface.co/ehartford/dolphin-2.1-mistral-7b
+
+
 
 // user + content management:
-// - add auth and user accounts and storing notes
+// - add auth and user accounts and storing notes (clerk?)
 // - add database to store summary
 // - add database to store topic and vocab list (per user)
 
