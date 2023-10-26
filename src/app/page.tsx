@@ -27,20 +27,22 @@ export default function Home() {
   const transcriptRef = useRef(transcript);
   const transcriptIndexRef = useRef(0);
   const transcriptBacktrackIndex = 4000; // backtrack ~1000 tokens
+  const transcriptChunkLength = 16000; // 4k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
   const timeStampInterval = 30000; // 30 seconds in milliseconds
 
   const notesRef = useRef('');
-  const [displayNotes, setDisplayNotes] = useState('');
+  const summaryRef = useRef('');
+  const [customQuery, setCustomQuery] = useState('What are the top five key takeaways from the last few minutes of the lecture?'); // query for custom notes
+  const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
+  const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
   const [displayTranscript, setDisplayTranscript] = useState('');
-  const [isGeneratingNotes, setIsGeneratingNotes] = useState(false); // prevent multiple notes from being generated at once
+  const [isGenerating, setIsGenerating] = useState(false); // prevent multiple notes from being generated at once
 
   const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   const second = 1000;
   const minute = 60 * second;
-  const noteInterval = 3 * minute; 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null); // prevent multiple intervals from being set
   
   const [topic, setTopic] = useState('');
   const [nextNoteTime, setNextNoteTime] = useState(0); // time of next note to be generated [in milliseconds
@@ -58,12 +60,12 @@ export default function Home() {
 
   const onFinish = (message: Message) => {
     console.log('Chat generation finished with message: ', message);
-    setIsGeneratingNotes(false);
+    setIsGenerating(false);
   }
 
   const onError = (err: Error) => {
     console.log('Chat generation error: ', err);
-    setIsGeneratingNotes(false);
+    setIsGenerating(false);
   }
 
   const { messages: summaryMessages, append: summaryAppend } = useChat({ 
@@ -79,7 +81,7 @@ export default function Home() {
     onError: onError
   });
 
-  const { messages: customMessage, append: customAppend } = useChat({ 
+  const { messages: customMessages, append: customAppend } = useChat({ 
     api: '/api/openai',
     initialMessages: [
       {
@@ -108,7 +110,8 @@ export default function Home() {
     }
   });
 
-  // update the transcript displayed on the page
+  // update the transcript displayed on the page on detecting new speech
+  // see if new summary needs to be generated
   useEffect(() => {
     transcriptRef.current = finalTranscript;
     if (transcriptRef.current.length > 0 && lectureStartTime !== null) {
@@ -122,6 +125,7 @@ export default function Home() {
 
         const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
         lastTranscriptIndex.current = transcriptRef.current.length;
+        // display timestamp every 30 seconds
         setDisplayTranscript(prevDisplay => {
           return prevDisplay + newTranscriptSegment + '\n' + timeString + ' ';
         });
@@ -132,62 +136,40 @@ export default function Home() {
           return prevDisplay + newTranscriptSegment;
         });
       }
+
+      // check if 4000 tokens have been added since last summary
+      if (transcriptRef.current.length - transcriptIndexRef.current > transcriptChunkLength) {
+        generateSummary();
+      }
     } 
   }, [finalTranscript]);
 
-  
-
+  // update the running summary on new messages from the assistant
   useEffect(() => {
-    // concatentate all messages from the assistant into one string separated by newlines
     const assistantMessages = summaryMessages.filter(msg => msg.role === 'assistant');
-    const notes = assistantMessages.map(msg => msg.content).join('\n');
-    notesRef.current = notes;
-    setDisplayNotes(notesRef.current);
-
+    const summary = assistantMessages.map(msg => msg.content).join('\n');
+    
+    summaryRef.current = summary;
+    setDisplaySummary(summaryRef.current);
   }, [summaryMessages]);
 
-  // update the notes on interval
+    // update the notes displayed on new messages from the assistant
+    useEffect(() => {
+      // only display the last message from the assistant
+      const assistantMessages = customMessages.filter(msg => msg.role === 'assistant');
+      const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+  
+      notesRef.current = lastAssistantMessage.content;
+      setDisplayNotes(notesRef.current);
+    }, [customMessages]);
+
+  // set lecture start time
   useEffect(() => {
     console.log(`isListening: ${isListening}`);
 
-    // If the interval is already active, we simply return.
-    if (intervalRef.current) return;
-
+    // generate the running summary on interval
     if (isListening && lectureStartTime === null) {
       const startTime = Date.now();
-      setNextNoteTime(startTime + noteInterval);
-
-      intervalRef.current = setInterval(async () => {
-        if (isGeneratingNotes) {
-          console.log('Notes are already being generated. Waiting for next interval.');
-          return
-        }
-
-        setIsGeneratingNotes(true);
-        console.log('Generating notes...');
-        const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
-        // backtrack to include the ~1000 tokens before the current transcript index
-        transcriptIndexRef.current = Math.max(partialTranscript.length - transcriptBacktrackIndex, 0);
-        const newMessage : CreateMessage = {
-          role: 'user',
-          content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
-        };
-        // immediately append the message to the chat and trigger the assistant to respond
-        summaryAppend(newMessage);
-
-        const currentTime = Date.now();
-        setNextNoteTime(prev => {
-          if (prev === 0) {
-            return currentTime + noteInterval;
-          } else {
-            return prev + noteInterval;
-          }
-        });
-
-        // console.log(`notes: ${notesRef.current}`);
-        // console.log(`transcript: ${partialTranscript}`);
-
-      }, noteInterval);
 
       setLectureStartTime(prev => {
         if (prev === null) {
@@ -198,41 +180,8 @@ export default function Home() {
         }
       });
     }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
   }, [isListening]);
- 
-  // create prompt using transcript and notes
-  const createPrompt = (transcript: string, notes: string, transcriptInterval: number, topic: string) => {
-    return `
-    Given the most recent segment of the transcript from a lecture on ${topic} and the existing lecture notes generated previously, produce only the new sections or updates required. Concentrate on:
 
-    - Incorporating new main ideas and essential details.
-    - Preserving a hierarchical format by using headings, subheadings, bullet points, and numbered lists where appropriate.
-    - Using succinct language.
-    - Emphasis on new formulas, examples, or references, marking them distinctively.
-    - Only present new or fully revised sections. Ensure integration is smooth and free of redundancy. Do not make additional comments on unchanged content.
-    - Indication of revisions to previous sections, without regenerating the entire section.
-
-    ---
-    
-    **Lecture Notes Generated so far**:
-    ${notes || 'No notes generated yet.'}
-    ---
-    
-    **New Transcript Segment**:
-    ${transcript || 'No new transcript segment.'}
-
-    ---
-
-    (continue to generate new notes here)
-    `
-  }
 
   // handlers for starting and stopping the speech recognition and note taking
   const startListening = () => {
@@ -280,25 +229,39 @@ export default function Home() {
     setTopic(e.target.value);
   };
 
-  const handleGenerateNotes = () => {
-    
-    if (isGeneratingNotes) {
+  const handleGenerateCustom = () => {
+    if (isGenerating) {
       console.log('Notes are already being generated.');
       return 
     }
-    setIsGeneratingNotes(true);
-    console.log('Generating notes...');
-    const currentTime = Date.now();
-    
-    const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
-    // backtrack to include the ~1000 tokens before the current transcript index
-    transcriptIndexRef.current = Math.max(partialTranscript.length - transcriptBacktrackIndex, 0);
+    setIsGenerating(true);
+    console.log('Generating summary...');
+    // first generate summary
+    generateSummary();
+
+    // then generate notes
     const newMessage : CreateMessage = {
       role: 'user',
-      content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
+      content: customUserPrompt(summaryRef.current, topic, customQuery)
     };
-    // immediately append the message to the chat and trigger the assistant to respond
-    summaryAppend(newMessage);
+    customAppend(newMessage);
+  }
+
+  function generateSummary() {
+    if (!isGenerating) {
+      setIsGenerating(true);
+      const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
+      // backtrack to include the ~1000 tokens before the current transcript index
+      transcriptIndexRef.current = Math.max(transcriptRef.current.length - transcriptBacktrackIndex, 0)
+
+      const newMessage : CreateMessage = {
+        role: 'user',
+        content: summaryUserPrompt(partialTranscript, summaryRef.current, topic)
+      };
+
+      // append to chat
+      summaryAppend(newMessage);
+    }
   }
 
   return (
@@ -320,7 +283,7 @@ export default function Home() {
               <FontAwesomeIcon icon={faCopy} />
             </div>
             <p>
-              {displayTranscript}
+              {displaySummary}
             </p>
           </div>
         </div>
@@ -331,8 +294,7 @@ export default function Home() {
               <FontAwesomeIcon icon={faCopy} />
             </div>
             <p>
-              {/* {displayNotes} */}
-              {/* {displayTranscript} */}
+              {displayNotes}
             </p>
           </div>
         </div>
@@ -349,7 +311,7 @@ export default function Home() {
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
-          <FontAwesomeIcon icon={faEdit} onClick={handleGenerateNotes}/>
+          <FontAwesomeIcon icon={faEdit} onClick={handleGenerateCustom}/>
         </div>
         <div className={`${styles.navItem}`}>
           {/* display nextNote time in a human readable format HH:MM:SS in current time zone */}
@@ -365,6 +327,13 @@ export default function Home() {
 
 
 // TODO:
+// 1. add auth
+// 2. add gpt4 on final notes
+// 3. download files
+// 4. deepgram + custom vocab
+// 5. toast notifications (transition to shadcn ?)
+
+
 // sr improvements:
 // - use deepgram 
 // - generate vocab list from input topic
