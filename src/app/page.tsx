@@ -26,8 +26,8 @@ export default function Home() {
 
   const transcriptRef = useRef(transcript);
   const transcriptIndexRef = useRef(0);
-  const transcriptBacktrackIndex = 4000; // backtrack ~1000 tokens
-  const transcriptChunkLength = 16000; // 4k tokens per chunk
+  const transcriptBacktrackIndex = 2000; // backtrack ~500 tokens
+  const transcriptChunkLength = 6000; // 2k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
   const timeStampInterval = 30000; // 30 seconds in milliseconds
@@ -45,7 +45,6 @@ export default function Home() {
   const minute = 60 * second;
   
   const [topic, setTopic] = useState('');
-  const [nextNoteTime, setNextNoteTime] = useState(0); // time of next note to be generated [in milliseconds
 
 //   const testMessage = `
 //   She left her job at the Fed. She was not renewed when she was out, which was a travesty. Fantastic job. You may know why she wasn't renewed. The president at the time felt that she was too short to be the head of the Federal Reserve. More on that soon. Alright, so the Fed policymakers, they want a level of output and they want inflation rate and all. We talked about the TH section.
@@ -158,7 +157,9 @@ export default function Home() {
       // only display the last message from the assistant
       const assistantMessages = customMessages.filter(msg => msg.role === 'assistant');
       const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
-  
+      if (lastAssistantMessage === undefined) {
+        return;
+      }
       notesRef.current = lastAssistantMessage.content;
       setDisplayNotes(notesRef.current);
     }, [customMessages]);
@@ -314,8 +315,7 @@ export default function Home() {
           <FontAwesomeIcon icon={faEdit} onClick={handleGenerateCustom}/>
         </div>
         <div className={`${styles.navItem}`}>
-          {/* display nextNote time in a human readable format HH:MM:SS in current time zone */}
-          <FontAwesomeIcon icon={faClock} />{`: ${new Date(nextNoteTime).toLocaleTimeString()}`}
+          {transcriptRef.current.length % transcriptChunkLength} / {transcriptChunkLength}
         </div>
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
@@ -327,9 +327,10 @@ export default function Home() {
 
 
 // TODO:
+// 0. auto scroll + text boxes
 // 1. add auth
-// 2. add gpt4 on final notes
-// 3. download files
+// 2. add gpt4 on final notes icon
+// 3. download files icon
 // 4. deepgram + custom vocab
 // 5. toast notifications (transition to shadcn ?)
 
@@ -358,3 +359,4 @@ export default function Home() {
 // - auto scroll
 // - side bar
 // - add toasts for notif
+// - better scroll bars
