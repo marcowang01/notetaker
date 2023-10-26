@@ -9,15 +9,14 @@ const openai = new OpenAI({
  
 export async function POST(req: Request) {
   // Extract the `messages` from the body of the request
-  const { messages } = await req.json()
+  const { messages, model } = await req.json()
 
-  console.log("new call to things")
-  console.log(messages)
+  console.log("new messsage")
+  console.log(messages[messages.length - 1])
  
   // Request the OpenAI API for the response based on the prompt
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo-16k',
-    // model: 'gpt-4',
+    model: model || 'gpt-3.5-turbo-16k', // default to the 16k model
     messages: messages,
     stream: true,
     // max_tokens: 500,

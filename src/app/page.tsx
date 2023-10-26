@@ -6,6 +6,15 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faPlay, faPause, faEarListen, faEdit, faClock } from '@fortawesome/free-solid-svg-icons';
+import {
+  summarySystemPrompt,
+  summaryUserPrompt,
+  finalNoteSystemPrompt,
+  finalNoteUserPrompt,
+  customSystemPrompt,
+  customUserPrompt
+} from '../util/prompts'
+
 
 import styles from './page.module.css'
 import next from 'next';
@@ -32,45 +41,72 @@ export default function Home() {
   const minute = 60 * second;
   const noteInterval = 3 * minute; 
   const intervalRef = useRef<NodeJS.Timeout | null>(null); // prevent multiple intervals from being set
+  
   const [topic, setTopic] = useState('');
   const [nextNoteTime, setNextNoteTime] = useState(0); // time of next note to be generated [in milliseconds
 
-  const initialMessages : Message[] = [
-    {
-      id: '0',
-      role: 'system',
-      content: `
-      You are a helpful assistant tasked with generating notes for a live lecture.
-      You will be given transcript segments and existing lecture notes, synthesize only the new sections or those requiring updates. Adhere to a clear structure, and ensure conciseness. Do not regenerate content that remains unchanged.
-      Stick to a structured, concise format. Do NOT rehash unchanged content, instead indicate the revisions to seamlessly integrate with existing notes. Your goal is streamlined efficiency.
-      This revision prioritizes efficiency, focusing on generating only the necessary content.
-      Note that the transcription may mishear technical terms or miss words entirely. You may need to correct the transcript to ensure the notes are accurate.
-      `
-    }
-  ];
+//   const testMessage = `
+//   She left her job at the Fed. She was not renewed when she was out, which was a travesty. Fantastic job. You may know why she wasn't renewed. The president at the time felt that she was too short to be the head of the Federal Reserve. More on that soon. Alright, so the Fed policymakers, they want a level of output and they want inflation rate and all. We talked about the TH section.
+// (00:33) And. And so we talked about like a loss. The nerdy thing then these slides are bunch of maths would look at it basically. If we're here. That's zero. That's the best we can do is to zero. If we're on for that, it's a negative. So we're losing it. We're offense. It's a loss function. The best we can do is no loss.
+// (01:00) If we're somewhere off. Better value. Our loss function gets worse the farther we get from that point. So that's the best. That's the happiest we can be. And they were less happy, less happy, less happy. And generally going to go with the balance loss function. Being off on inflation as much as we hate being offline. That's just kind of math for circle is much easier than the math for other shapes.
+// (01:31) That's why. The great economist.  
+//   `
+//   useEffect(() => {
+//     setDisplayTranscript(testMessage);
+//     setDisplayNotes(testMessage);
+//   }, []);
 
-  const testMessage = `
-  She left her job at the Fed. She was not renewed when she was out, which was a travesty. Fantastic job. You may know why she wasn't renewed. The president at the time felt that she was too short to be the head of the Federal Reserve. More on that soon. Alright, so the Fed policymakers, they want a level of output and they want inflation rate and all. We talked about the TH section.
-(00:33) And. And so we talked about like a loss. The nerdy thing then these slides are bunch of maths would look at it basically. If we're here. That's zero. That's the best we can do is to zero. If we're on for that, it's a negative. So we're losing it. We're offense. It's a loss function. The best we can do is no loss.
-(01:00) If we're somewhere off. Better value. Our loss function gets worse the farther we get from that point. So that's the best. That's the happiest we can be. And they were less happy, less happy, less happy. And generally going to go with the balance loss function. Being off on inflation as much as we hate being offline. That's just kind of math for circle is much easier than the math for other shapes.
-(01:31) That's why. The great economist.  
-  `
-  useEffect(() => {
-    setDisplayTranscript(testMessage);
-    setDisplayNotes(testMessage);
-  }, []);
-  
-
-  const onFinish = () => {
-    console.log('Chat generation finished.');
+  const onFinish = (message: Message) => {
+    console.log('Chat generation finished with message: ', message);
     setIsGeneratingNotes(false);
   }
 
-  const { messages, append } = useChat({ 
+  const onError = (err: Error) => {
+    console.log('Chat generation error: ', err);
+    setIsGeneratingNotes(false);
+  }
+
+  const { messages: summaryMessages, append: summaryAppend } = useChat({ 
     api: '/api/openai',
-    initialMessages: initialMessages,
-    onFinish: onFinish
-   });
+    initialMessages: [
+      {
+        id: '0',
+        role: 'system',
+        content: summarySystemPrompt()
+      }
+    ],
+    onFinish: onFinish,
+    onError: onError
+  });
+
+  const { messages: customMessage, append: customAppend } = useChat({ 
+    api: '/api/openai',
+    initialMessages: [
+      {
+        id: '0',
+        role: 'system',
+        content: customSystemPrompt()
+      }
+    ],
+    onFinish: onFinish,
+    onError: onError,
+  });
+
+  const { messages: finalNoteMessages, append: finalNoteAppend } = useChat({ 
+    api: '/api/openai',
+    initialMessages: [
+      {
+        id: '0',
+        role: 'system',
+        content: customSystemPrompt()
+      }
+    ],
+    onFinish: onFinish,
+    onError: onError,
+    body: {
+      model: 'gpt-4',
+    }
+  });
 
   // update the transcript displayed on the page
   useEffect(() => {
@@ -103,12 +139,12 @@ export default function Home() {
 
   useEffect(() => {
     // concatentate all messages from the assistant into one string separated by newlines
-    const assistantMessages = messages.filter(msg => msg.role === 'assistant');
+    const assistantMessages = summaryMessages.filter(msg => msg.role === 'assistant');
     const notes = assistantMessages.map(msg => msg.content).join('\n');
     notesRef.current = notes;
     setDisplayNotes(notesRef.current);
 
-  }, [messages]);
+  }, [summaryMessages]);
 
   // update the notes on interval
   useEffect(() => {
@@ -137,7 +173,7 @@ export default function Home() {
           content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
         };
         // immediately append the message to the chat and trigger the assistant to respond
-        append(newMessage);
+        summaryAppend(newMessage);
 
         const currentTime = Date.now();
         setNextNoteTime(prev => {
@@ -262,7 +298,7 @@ export default function Home() {
       content: createPrompt(partialTranscript, notesRef.current, noteInterval, topic)
     };
     // immediately append the message to the chat and trigger the assistant to respond
-    append(newMessage);
+    summaryAppend(newMessage);
   }
 
   return (
@@ -352,3 +388,4 @@ export default function Home() {
 // - use shadcn ui
 // - auto scroll
 // - side bar
+// - add toasts for notif
