@@ -281,6 +281,11 @@ export default function Home() {
   };
 
   const handleGenerateCustom = () => {
+    if (topic.length === 0) {
+      console.log("Err: Topic is empty.")
+      return 
+    }
+
     shouldGenerateCustom.current = true;
     const success = generateSummary();
     if (!success) {
@@ -289,6 +294,11 @@ export default function Home() {
   }
 
   const handleGenerateFinal = () => {
+    if (topic.length === 0) {
+      console.log("Err: Topic is empty.")
+      return 
+    }
+    
     shouldGenerateFinal.current = true;
     const success = generateSummary();
     if (!success) {
@@ -436,6 +446,7 @@ export default function Home() {
 
 
 // TODO:
+// 3. deploy to vercel
 // 4. deepgram + custom vocab
 // 5. toast notifications (transition to shadcn ?)
 

@@ -25,29 +25,34 @@ const summaryUserPrompt = (transcript: string, existing_summary: string, topic: 
 
 // for generating a polished lecture notes for the entire lecture based on the summary
 const finalNoteSystemPrompt = () => {
-  return `You are tasked with generating a comprehensive and polished set of lecture notes. 
-  The notes should be well-structured, clear, and easy to follow. 
-  Use headings, subheadings, bullet points, and numbered lists to ensure a logical flow of information. 
-  Always prioritize clarity and accuracy.
-  The lecture notes should not exceed 1 page in length.
+  return `
+    Your objective is to produce polished lecture notes from a provided summary. 
+    The notes should be:
+    - Concise yet comprehensive
+    - Hierarchically structured with headings, subheadings, and various levels of bullet points
+    - Clear and easy to understand
+    - No longer than a single page
+    Ensure that important elements like formulas, examples, definitions, and references are distinctively highlighted.
   `;
 }
+
 
 // for generating a polished lecture notes for the entire lecture based on the summary
 const finalNoteUserPrompt = (summary: string, topic: string) => {
   return `
-  Act as an expert in the area of ${topic}. You have been provided with a summary for a lecture on the topic of ${topic}. 
-  Using the summary below, your task is to create polished lecture notes. 
-  Ensure the notes are comprehensive, well-structured, and easy to follow.
-  We recommend using headings, subheadings, bullet points,sub bullets and numbered lists to ensure a logical flow of information.
-  ------------
-  ${summary}
-  ------------
-  Given the summary, transform it into detailed and organized lecture notes.
-  Note: Do not leave out essential details from the summary. Incorporate any important points, examples, or references.
-  
-  LECTURE NOTES:`;
+    As a domain expert in ${topic}, you have been given a summarized version of a lecture about ${topic}. 
+    Your task is to transform the summary into polished lecture notes. Here are some guidelines:
+    - The notes should capture the essence of the topic comprehensively.
+    - Utilize a hierarchical structure with headings, subheadings, bullet points, and sub-bullets for clarity.
+    - Distinctly mark and highlight new formulas, examples, definitions, and references.
+    - Do not omit any critical details from the summary.
+    ------------
+    ${summary}
+    ------------
+    Based on the above summary, construct detailed and organized LECTURE NOTES:
+  `;
 }
+
 
 // for generating answers to questions on the fly based on the existing summary
 const customUserPrompt = (summary: string, topic: string, query: string) => {
