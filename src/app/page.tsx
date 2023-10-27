@@ -327,7 +327,7 @@ export default function Home() {
     if (!isGenerating.current) {
       isGenerating.current = true;
       console.log('Generating summary...');
-      
+
       const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
       // backtrack to include the ~1000 tokens before the current transcript index
       transcriptIndexRef.current = Math.max(transcriptRef.current.length - transcriptBacktrackIndex, 0)
@@ -390,7 +390,7 @@ export default function Home() {
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
-          <FontAwesomeIcon icon={faCircleInfo}/>
+          <FontAwesomeIcon icon={faCircleInfo}/> help
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
           <Link href="/api/auth/signout">
