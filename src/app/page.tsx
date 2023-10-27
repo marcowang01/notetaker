@@ -5,7 +5,10 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faEdit, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faEdit, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
+
 import {
   summarySystemPrompt,
   summaryUserPrompt,
@@ -17,7 +20,6 @@ import {
 
 
 import styles from './page.module.css'
-import next from 'next';
 
 export default function Home() {
   
@@ -46,16 +48,12 @@ export default function Home() {
   
   const [topic, setTopic] = useState('');
 
-//   const testMessage = `
-//   She left her job at the Fed. She was not renewed when she was out, which was a travesty. Fantastic job. You may know why she wasn't renewed. The president at the time felt that she was too short to be the head of the Federal Reserve. More on that soon. Alright, so the Fed policymakers, they want a level of output and they want inflation rate and all. We talked about the TH section.
-// (00:33) And. And so we talked about like a loss. The nerdy thing then these slides are bunch of maths would look at it basically. If we're here. That's zero. That's the best we can do is to zero. If we're on for that, it's a negative. So we're losing it. We're offense. It's a loss function. The best we can do is no loss.
-// (01:00) If we're somewhere off. Better value. Our loss function gets worse the farther we get from that point. So that's the best. That's the happiest we can be. And they were less happy, less happy, less happy. And generally going to go with the balance loss function. Being off on inflation as much as we hate being offline. That's just kind of math for circle is much easier than the math for other shapes.
-// (01:31) That's why. The great economist.  
-//   `
-//   useEffect(() => {
-//     setDisplayTranscript(testMessage);
-//     setDisplayNotes(testMessage);
-//   }, []);
+  const { data: session } = useSession({
+    required: true,
+    onUnauthenticated() {
+      redirect('/api/auth/signin?callbackUrl=/client')
+    }
+  })
 
   const onFinish = (message: Message) => {
     console.log('Chat generation finished with message: ', message);
@@ -316,6 +314,10 @@ export default function Home() {
         </div>
         <div className={`${styles.navItem}`}>
           {transcriptRef.current.length % transcriptChunkLength} / {transcriptChunkLength}
+        </div>
+        <div className={`${styles.navItem}`}>
+          <FontAwesomeIcon icon={faEnvelope}/>
+          {` ${session?.user?.email}`}
         </div>
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}

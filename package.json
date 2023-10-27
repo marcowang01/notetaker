@@ -16,6 +16,7 @@
     "axios": "^1.5.1",
     "langchain": "^0.0.166",
     "next": "13.5.4",
+    "next-auth": "^4.24.3",
     "openai": "^4.12.1",
     "openai-edge": "^1.2.2",
     "react": "^18",
