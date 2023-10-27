@@ -15,7 +15,7 @@ const summaryUserPrompt = (transcript: string, existing_summary: string, topic: 
   If there is no existing summary, please start a new one based on the lecture transcript.
   Here is the current summary: ${existing_summary || "No existing summary provided"}.
   
-  Evaluate the recent lecture transcript below for any noteworthy content.
+  Evaluate the most recent lecture transcript below for any noteworthy content.
   ------------
   ${transcript}
   ------------
@@ -23,7 +23,7 @@ const summaryUserPrompt = (transcript: string, existing_summary: string, topic: 
   Focus on using succint language but retaining a detailed summary, presenting new facts and ideas.
   New example problems, facts, formulas, definitions, and references should be marked distinctively and completely.
   Your goal is to reduce the length of the transcript but should be complete retain all the important information and details.
-  The summary should allow a reader to understand the lecture completely without having to read the entire transcript.
+  The summary should allow a reader to understand the lecture so far completely without having to read the entire transcript.
   You should use a bullet points and sub-bullet points to organize the summary. Complete sentences are not required.
   If the new context isn't useful, respond with the phrase "CONCISE SUMMARY: no new content".
 

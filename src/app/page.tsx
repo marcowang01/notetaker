@@ -31,7 +31,7 @@ export default function Home() {
   const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const transcriptIndexRef = useRef(0);
   const transcriptBacktrackIndex = 300 * 4; // backtrack 300 tokens
-  const transcriptChunkLength = 1500 * 4; // 1.5k tokens per chunk
+  const transcriptChunkLength = 1000 * 4; // 1.0k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
   const timeStampInterval = 30000; // 30 seconds in milliseconds
@@ -40,7 +40,7 @@ export default function Home() {
   const summaryRef = useRef('');
   const notesParagraphRef = useRef<HTMLParagraphElement>(null);
   const summaryParagraphRef = useRef<HTMLParagraphElement>(null);
-  const [customQuery, setCustomQuery] = useState('What are the top five key takeaways from the last few minutes of the lecture? Highlight new facts, formulas and definitions if applicable.'); // query for custom notes
+  const [customQuery, setCustomQuery] = useState('Highlight new facts, examples, formulas and definitions presented in the last few minutes of the lecture. Then, write the top 5 takeaways from the summary.'); // query for custom notes
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
   const [displayTranscript, setDisplayTranscript] = useState('');
@@ -484,7 +484,7 @@ export default function Home() {
           <FontAwesomeIcon icon={faVialCircleCheck}/>
         </div>
         <div className={`${styles.navItem}`}>
-          {transcriptRef.current.length % transcriptChunkLength} / {transcriptChunkLength}
+          {transcriptRef.current.length - transcriptIndexRef.current} / {transcriptChunkLength}
         </div>
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
