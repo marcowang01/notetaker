@@ -23,7 +23,7 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
     "Shows most recent live transcript": faEarListen,
     "Generate Takeaways using GPT-3.5": faWandMagic,
     "Generate Final Notes using GPT-4": faWandMagicSparkles,
-    "Generate Test Content": faVialCircleCheck,
+    "Generate Debug Transcipt": faVialCircleCheck,
   }
 
   const handleClose = () => {

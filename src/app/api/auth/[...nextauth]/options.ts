@@ -1,6 +1,11 @@
 import type { NextAuthOptions } from 'next-auth'
 import GoogleProvider from "next-auth/providers/google";
 
+const validEmails = [
+  'stanleywang2999@gmail.com',
+  'hellsegga.site@gmail.com'
+]
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -11,7 +16,10 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === "google") {
-        return profile?.email === process.env.GOOGLE_EMAIL
+        // check if email is in valid list
+        if (profile?.email && validEmails.includes(profile.email)) {
+          return true
+        }
       }
       return false
     },
