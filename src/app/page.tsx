@@ -83,10 +83,10 @@ export default function Home() {
   
       if (shouldGenerateCustom.current) {
         shouldGenerateCustom.current = false;
-        handleGenerateCustom();
+        generateCustomNotes();
       } else if (shouldGenerateFinal.current) {
         shouldGenerateFinal.current = false;
-        handleGenerateFinal();
+        generateFinalNotes();
       }
     },
     onError: onError
@@ -419,7 +419,7 @@ export default function Home() {
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
-          <FontAwesomeIcon icon={faCircleInfo}/> help
+          <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
           <Link href="/api/auth/signout">
