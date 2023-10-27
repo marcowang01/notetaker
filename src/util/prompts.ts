@@ -28,7 +28,9 @@ const finalNoteSystemPrompt = () => {
   return `You are tasked with generating a comprehensive and polished set of lecture notes. 
   The notes should be well-structured, clear, and easy to follow. 
   Use headings, subheadings, bullet points, and numbered lists to ensure a logical flow of information. 
-  Always prioritize clarity and accuracy.`;
+  Always prioritize clarity and accuracy.
+  The lecture notes should not exceed 1 page in length.
+  `;
 }
 
 // for generating a polished lecture notes for the entire lecture based on the summary
@@ -37,6 +39,7 @@ const finalNoteUserPrompt = (summary: string, topic: string) => {
   Act as an expert in the area of ${topic}. You have been provided with a summary for a lecture on the topic of ${topic}. 
   Using the summary below, your task is to create polished lecture notes. 
   Ensure the notes are comprehensive, well-structured, and easy to follow.
+  We recommend using headings, subheadings, bullet points,sub bullets and numbered lists to ensure a logical flow of information.
   ------------
   ${summary}
   ------------

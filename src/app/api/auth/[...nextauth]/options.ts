@@ -15,6 +15,18 @@ export const authOptions: NextAuthOptions = {
       }
       return false
     },
+    async redirect({ url, baseUrl }) {
+      // for now, always redirect to "/"
+      // for some reason, url always points to "/client"
+
+      return baseUrl
+
+      // // Allows relative callback URLs
+      // if (url.startsWith("/")) return `${baseUrl}${url}`
+      // // Allows callback URLs on the same origin
+      // else if (new URL(url).origin === baseUrl) return url
+      // return baseUrl
+    }
   },
   secret: process.env.NEXTAUTH_SECRET,
 }

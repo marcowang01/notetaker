@@ -5,10 +5,11 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faEdit, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-
+import Link from 'next/link';
+import { testEconTranscript } from '../util/testTranscripts'
 import {
   summarySystemPrompt,
   summaryUserPrompt,
@@ -17,7 +18,6 @@ import {
   customSystemPrompt,
   customUserPrompt
 } from '../util/prompts'
-
 
 import styles from './page.module.css'
 
@@ -43,7 +43,10 @@ export default function Home() {
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
   const [displayTranscript, setDisplayTranscript] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false); // prevent multiple notes from being generated at once
+
+  const isGenerating = useRef(false);
+  const shouldGenerateCustom = useRef(false);
+  const shouldGenerateFinal = useRef(false);
 
   const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   const second = 1000;
@@ -54,18 +57,13 @@ export default function Home() {
   const { data: session } = useSession({
     required: true,
     onUnauthenticated() {
-      redirect('/api/auth/signin?callbackUrl=/client')
+      redirect('/api/auth/signin?callbackUrl=/123')
     }
   })
 
-  const onFinish = (message: Message) => {
-    console.log('Chat generation finished with message: ', message);
-    setIsGenerating(false);
-  }
-
   const onError = (err: Error) => {
     console.log('Chat generation error: ', err);
-    setIsGenerating(false);
+    isGenerating.current = false;
   }
 
   const { messages: summaryMessages, append: summaryAppend } = useChat({ 
@@ -77,7 +75,18 @@ export default function Home() {
         content: summarySystemPrompt()
       }
     ],
-    onFinish: onFinish,
+    onFinish: (message: Message) => {
+      console.log('Chat generation finished with message: ', message);
+      isGenerating.current = false;
+  
+      if (shouldGenerateCustom.current) {
+        shouldGenerateCustom.current = false;
+        handleGenerateCustom();
+      } else if (shouldGenerateFinal.current) {
+        shouldGenerateFinal.current = false;
+        handleGenerateFinal();
+      }
+    },
     onError: onError
   });
 
@@ -90,7 +99,11 @@ export default function Home() {
         content: customSystemPrompt()
       }
     ],
-    onFinish: onFinish,
+    onFinish: (message: Message) => {
+      console.log('Chat generation finished with message: ', message);
+      isGenerating.current = false;
+      shouldGenerateCustom.current = false;
+    },
     onError: onError,
   });
 
@@ -100,10 +113,14 @@ export default function Home() {
       {
         id: '0',
         role: 'system',
-        content: customSystemPrompt()
+        content: finalNoteSystemPrompt()
       }
     ],
-    onFinish: onFinish,
+    onFinish: (message: Message) => {
+      console.log('Chat generation finished with message: ', message);
+      isGenerating.current = false;
+      shouldGenerateFinal.current = false;
+    },
     onError: onError,
     body: {
       model: 'gpt-4',
@@ -153,17 +170,30 @@ export default function Home() {
     setDisplaySummary(summaryRef.current);
   }, [summaryMessages]);
 
-    // update the notes displayed on new messages from the assistant
-    useEffect(() => {
-      // only display the last message from the assistant
-      const assistantMessages = customMessages.filter(msg => msg.role === 'assistant');
-      const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
-      if (lastAssistantMessage === undefined) {
-        return;
-      }
-      notesRef.current = lastAssistantMessage.content;
-      setDisplayNotes(notesRef.current);
-    }, [customMessages]);
+  // update the notes displayed on new messages from the assistant
+  useEffect(() => {
+    // only display the last message from the assistant
+    const assistantMessages = customMessages.filter(msg => msg.role === 'assistant');
+    const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+    if (lastAssistantMessage === undefined) {
+      return;
+    }
+    notesRef.current = lastAssistantMessage.content;
+    setDisplayNotes(notesRef.current);
+  }, [customMessages]);
+
+  // update the notes displayed on new messages from the assistant
+  useEffect(() => {
+    // only display the last message from the assistant
+    const assistantMessages = finalNoteMessages.filter(msg => msg.role === 'assistant');
+    const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+    if (lastAssistantMessage === undefined) {
+      return;
+    }
+    // override custom notes with final notes
+    notesRef.current = lastAssistantMessage.content;
+    setDisplayNotes(notesRef.current);
+  }, [finalNoteMessages]);
 
   // set lecture start time
   useEffect(() => {
@@ -251,26 +281,31 @@ export default function Home() {
   };
 
   const handleGenerateCustom = () => {
-    if (isGenerating) {
-      console.log('Notes are already being generated.');
-      return 
+    shouldGenerateCustom.current = true;
+    const success = generateSummary();
+    if (!success) {
+      generateCustomNotes();
     }
-    setIsGenerating(true);
-    console.log('Generating summary...');
-    // first generate summary
-    generateSummary();
-
-    // then generate notes
-    const newMessage : CreateMessage = {
-      role: 'user',
-      content: customUserPrompt(summaryRef.current, topic, customQuery)
-    };
-    customAppend(newMessage);
   }
 
+  const handleGenerateFinal = () => {
+    shouldGenerateFinal.current = true;
+    const success = generateSummary();
+    if (!success) {
+      generateFinalNotes();
+    }
+  }
+
+  // generate summary from transcript, returns true if successful
   function generateSummary() {
-    if (!isGenerating) {
-      setIsGenerating(true);
+    // check if there are new transcript segments to generate summary from
+    if (transcriptRef.current.length - transcriptBacktrackIndex === transcriptIndexRef.current) {
+      console.log('No new transcript segments to generate summary from.');
+      return false;
+    }
+
+    if (!isGenerating.current) {
+      isGenerating.current = true;
       const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
       // backtrack to include the ~1000 tokens before the current transcript index
       transcriptIndexRef.current = Math.max(transcriptRef.current.length - transcriptBacktrackIndex, 0)
@@ -282,11 +317,59 @@ export default function Home() {
 
       // append to chat
       summaryAppend(newMessage);
+
+      return true
     }
+    return false
+  }
+
+  function generateCustomNotes() {
+    if (isGenerating.current) {
+      console.log('Notes are already being generated.');
+      return 
+    }
+    isGenerating.current = true;
+    // then generate notes
+    const newMessage : CreateMessage = {
+      role: 'user',
+      content: customUserPrompt(summaryRef.current, topic, customQuery)
+    };
+    customAppend(newMessage);
+  }
+
+  function generateFinalNotes() {
+    if (isGenerating.current) {
+      console.log('Notes are already being generated.');
+      return 
+    }
+    isGenerating.current = true;
+
+    // then generate notes
+    const newMessage : CreateMessage = {
+      role: 'user',
+      content: finalNoteUserPrompt(summaryRef.current, topic)
+    };
+    finalNoteAppend(newMessage);
+  }
+
+  function handleGenerateTestTranscript() {
+    if (isGenerating.current) {
+      console.log('Notes are already being generated.');
+      return 
+    }
+    transcriptRef.current = testEconTranscript();
+    setDisplayTranscript(transcriptRef.current);
   }
 
   return (
     <div className={styles.mainContainer}>
+      <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
+        <div className={`${styles.navItem} ${styles.textButton}`}>
+          <Link href="/api/auth/signout">
+            <FontAwesomeIcon icon={faEnvelope}/> {` ${session?.user?.email}`}
+          </Link>
+        </div>
+      </div>
       <main className={styles.main}>
         <div className={styles.LRContainer}>
           <div className={styles.textDisplay}>
@@ -300,7 +383,7 @@ export default function Home() {
           </div>
           <div className={styles.textDisplay}>
             Running Summary:
-            <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
+            <div onClick={() => handleCopy(displaySummary)} className={styles.button}>
               <FontAwesomeIcon icon={faCopy} />
             </div>
             <p ref={summaryParagraphRef}>
@@ -332,14 +415,16 @@ export default function Home() {
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
-          <FontAwesomeIcon icon={faEdit} onClick={handleGenerateCustom}/>
+          <FontAwesomeIcon icon={faWandMagic} onClick={handleGenerateCustom}/>
+        </div>
+        <div className={`${styles.navItem} ${styles.textButton}`}>
+          <FontAwesomeIcon icon={faWandMagicSparkles} onClick={handleGenerateFinal}/>
+        </div>
+        <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleGenerateTestTranscript}>
+          <FontAwesomeIcon icon={faVialCircleCheck}/>
         </div>
         <div className={`${styles.navItem}`}>
           {transcriptRef.current.length % transcriptChunkLength} / {transcriptChunkLength}
-        </div>
-        <div className={`${styles.navItem}`}>
-          <FontAwesomeIcon icon={faEnvelope}/>
-          {` ${session?.user?.email}`}
         </div>
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
@@ -351,31 +436,21 @@ export default function Home() {
 
 
 // TODO:
-// 0. auto scroll + text boxes
-// 1. add auth
-// 2. add gpt4 on final notes icon
-// 3. download files icon
 // 4. deepgram + custom vocab
 // 5. toast notifications (transition to shadcn ?)
-
 
 // sr improvements:
 // - use deepgram 
 // - generate vocab list from input topic
 
 // notes improvements:
-// - generate running summary of transcript
-// - mini chat/easy buttons for generating instant notes
-// - pipeline to polish notes at the end (GPT-4? Guidance?)
 // llamaindex: https://www.llamaindex.ai/
 // private and local gpt, llama cpp and modal
 // mistral 7b dolphin: https://huggingface.co/ehartford/dolphin-2.1-mistral-7b
-
-
+// fast inference with modal: https://www.andrewhhan.com/2023/10/25/how-i-replaced-my-openai-spend-with-oss-and-modal.html
 
 // user + content management:
-// - add auth and user accounts and storing notes (clerk?)
-// - add database to store summary
+// - add database to store summary and store user sessions
 // - add database to store topic and vocab list (per user)
 
 // UI improvements:
@@ -384,3 +459,9 @@ export default function Home() {
 // - side bar
 // - add toasts for notif
 // - better scroll bars
+// - add tooltips
+
+// code improvements:
+// - refactor code into multiple files (navbar, text displays, etc.)
+// - better state transitions between generation
+// - better testing pipeline and error handling

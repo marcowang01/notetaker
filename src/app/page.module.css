@@ -32,7 +32,7 @@
   align-items: center;
   padding: 5rem 6rem;
   flex-grow: 1;
-  max-height: 95vh;
+  max-height: 90vh;
 }
 
 .LRContainer {
@@ -68,6 +68,7 @@
   width: calc(100% - 1rem);
   overflow-y: auto; 
   white-space: pre-line;
+  line-height: 1.6;
 }
 
 .textDisplay .button {
