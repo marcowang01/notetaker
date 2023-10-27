@@ -5,7 +5,7 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
@@ -18,8 +18,10 @@ import {
   customSystemPrompt,
   customUserPrompt
 } from '../util/prompts'
+import infoOverlay  from './components/infoOverlay'
 
 import styles from './page.module.css'
+import InfoOverlay from './components/infoOverlay';
 
 export default function Home() {
   
@@ -53,6 +55,7 @@ export default function Home() {
   const minute = 60 * second;
   
   const [topic, setTopic] = useState('');
+  const [showInfoOverlay, setShowInfoOverlay] = useState(false);
 
   const { data: session } = useSession({
     required: true,
@@ -298,12 +301,20 @@ export default function Home() {
       console.log("Err: Topic is empty.")
       return 
     }
-    
+
     shouldGenerateFinal.current = true;
     const success = generateSummary();
     if (!success) {
       generateFinalNotes();
     }
+  }
+
+  const handleInfoOverlay = () => {
+    setShowInfoOverlay(!showInfoOverlay);
+  }
+
+  const handleCloseInfoOverlay = () => {
+    setShowInfoOverlay(false);
   }
 
   // generate summary from transcript, returns true if successful
@@ -373,7 +384,11 @@ export default function Home() {
 
   return (
     <div className={styles.mainContainer}>
+      <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
+        <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
+          <FontAwesomeIcon icon={faCircleInfo}/>
+        </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
           <Link href="/api/auth/signout">
             <FontAwesomeIcon icon={faEnvelope}/> {` ${session?.user?.email}`}
