@@ -496,9 +496,14 @@ export default function Home() {
 
 
 // TODO:
-// 3. deploy to vercel
 // 4. deepgram + custom vocab
-// 5. toast notifications (transition to shadcn ?)
+// 5. toast notifications 
+// 5.5 add loading indicators for generating notes
+// 6. start user testing (feedback form super easy)
+
+// 6. use better model 
+
+// 7. mvp success --> refactor code + use shadcn ui
 
 // sr improvements:
 // - use deepgram 
@@ -509,6 +514,7 @@ export default function Home() {
 // private and local gpt, llama cpp and modal
 // mistral 7b dolphin: https://huggingface.co/ehartford/dolphin-2.1-mistral-7b
 // fast inference with modal: https://www.andrewhhan.com/2023/10/25/how-i-replaced-my-openai-spend-with-oss-and-modal.html
+// use blank tokens for confusing parts (then use gpt4 to fill the gaps at the end)
 
 // user + content management:
 // - add database to store summary and store user sessions
