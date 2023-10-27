@@ -18,7 +18,6 @@ import {
   customSystemPrompt,
   customUserPrompt
 } from '../util/prompts'
-import infoOverlay  from './components/infoOverlay'
 
 import styles from './page.module.css'
 import InfoOverlay from './components/infoOverlay';
@@ -380,6 +379,7 @@ export default function Home() {
     }
     transcriptRef.current = testEconTranscript();
     setDisplayTranscript(transcriptRef.current);
+    setTopic('intermediate macroeconomics');
   }
 
   return (
