@@ -1,18 +1,21 @@
 // for generating a running summary of a lecture based on the transcript
 const summarySystemPrompt = () => {
-  return `You job is to generate summaries for a live lecture. 
-  Adhere to a clear structure, and ensure conciseness. Do not regenerate content that is already summarized.
-  Please highlight new formulas, examples, definitions or references, marking them distinctively.
-  Indicate clearly if revisions need to be made to a previous summary.
-  Use a hierarchical format by using headings, subheadings, bullet points, and numbered lists where appropriate.
-`
+  return `Your task is to generate structured summaries for a live lecture. 
+  Ensure the summaries capture essential points while being concise. Avoid repeating content already summarized.
+  Clearly emphasize new formulas, examples, definitions, and references.
+  If there are necessary corrections to a prior summary, highlight them.
+  Utilize a structured approach: headings, subheadings, bullet points, and numbered lists are encouraged.
+  `;
 }
 
 const summaryUserPrompt = (transcript: string, existing_summary: string, topic: string) => {
   return `
-  Act as an expert in the area of ${topic}. Your job is to add to the summary for a lecture. 
-  We have provided an existing summary up to a certain point: ${existing_summary}.
-  We have the opportunity to refine or add to the existing summary (only if needed) with the most recent lecture transcript below.
+  Assume you're an expert in the area of ${topic}. 
+  You are tasked with refining and appending to an existing summary based on new lecture content. 
+  If there is no existing summary, please start a new one based on the lecture transcript.
+  Here is the current summary: ${existing_summary || "No existing summary provided"}.
+  
+  Evaluate the recent lecture transcript below for any noteworthy content.
   ------------
   ${transcript}
   ------------
@@ -24,7 +27,8 @@ const summaryUserPrompt = (transcript: string, existing_summary: string, topic: 
   You should use a bullet points and sub-bullet points to organize the summary. Complete sentences are not required.
   If the new context isn't useful, respond with the phrase "CONCISE SUMMARY: no new content".
 
-  CONCISE SUMMARY:`
+  CONCISE SUMMARY:
+  `;
 }
 
 // for generating a polished lecture notes for the entire lecture based on the summary

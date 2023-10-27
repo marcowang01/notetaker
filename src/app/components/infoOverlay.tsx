@@ -1,9 +1,11 @@
-'use client'
+// Assuming 'use strict' was intended
+'use strict'
 
 import styles from './infoOverlay.module.css'
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 
 interface TutorialOverlayProps {
   show: boolean;
@@ -13,35 +15,34 @@ interface TutorialOverlayProps {
 const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
   if (!show) return null;
 
+  const infoItems: Record<string, IconDefinition> = {
+    "Open This Menu": faCircleInfo,
+    "Click email to go to sign out page": faEnvelope,
+    "Copy Text": faCopy,
+    "Start/Pause Speech Recognition": faPlay,
+    "Shows most recent live transcript": faEarListen,
+    "Generate Takeaways using GPT-3.5": faWandMagic,
+    "Generate Final Notes using GPT-4": faWandMagicSparkles,
+    "Generate Test Content": faVialCircleCheck,
+  }
+
   const handleClose = () => {
     if (onClose) onClose(); // If an onClose prop is provided, call it
     // Add any other logic here if needed to handle closing within the component
   }
 
+  const InfoItem: React.FC<{ icon: IconDefinition, text: string }> = ({ icon, text }) => {
+    return (
+      <div className={styles.infoitem}>
+        <FontAwesomeIcon icon={icon}/>: {text}
+      </div>
+    );
+  }
+
   return (
     <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.tutorialContent} onClick={e => e.stopPropagation()}> 
-        <div>
-          <FontAwesomeIcon icon={faCircleInfo}/> Open This Menu
-        </div>
-        <div>
-          <FontAwesomeIcon icon={faCopy}/> Copy Text
-        </div>
-        <div>
-          <FontAwesomeIcon icon={faPlay}/>/<FontAwesomeIcon icon={faPause}/> Start/Pause Speech Recognition
-        </div>
-        <div>
-          <FontAwesomeIcon icon={faEarListen}/> Shows most recent live transcript
-        </div>
-        <div>
-          <FontAwesomeIcon icon={faWandMagic}/> Generate Takeaways using GPT-3.5
-        </div>
-        <div>
-          <FontAwesomeIcon icon={faWandMagicSparkles}/> Generate Final Notes using GPT-4
-        </div>
-        <div>
-          <FontAwesomeIcon icon={faVialCircleCheck}/> Generate Test Content
-        </div>
+        {Object.keys(infoItems).map((key) => <InfoItem key={key} icon={infoItems[key]} text={key} />)}
       </div>
     </div>
   );
