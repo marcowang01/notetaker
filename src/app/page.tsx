@@ -5,11 +5,11 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faForward } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
-import { testEconTranscript } from '../util/testTranscripts'
+import { testEconTranscript, testShortTranscript } from '../util/testTranscripts'
 import {
   summarySystemPrompt,
   summaryUserPrompt,
@@ -30,8 +30,8 @@ export default function Home() {
   const transcriptRef = useRef(transcript);
   const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const transcriptIndexRef = useRef(0);
-  const transcriptBacktrackIndex = 2000; // backtrack ~500 tokens
-  const transcriptChunkLength = 6000; // 2k tokens per chunk
+  const transcriptBacktrackIndex = 300 * 4; // backtrack 300 tokens
+  const transcriptChunkLength = 1500 * 4; // 1.5k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
   const timeStampInterval = 30000; // 30 seconds in milliseconds
@@ -186,14 +186,16 @@ export default function Home() {
 
   // update the notes displayed on new messages from the assistant
   useEffect(() => {
-    // only display the last message from the assistant
+    // disply all messages from the assistant
     const assistantMessages = finalNoteMessages.filter(msg => msg.role === 'assistant');
-    const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
-    if (lastAssistantMessage === undefined) {
+    const notes = assistantMessages.map(msg => msg.content).join('\n');
+
+    if (notes === '') {
       return;
     }
+
     // override custom notes with final notes
-    notesRef.current = lastAssistantMessage.content;
+    notesRef.current = notes;
     setDisplayNotes(notesRef.current);
   }, [finalNoteMessages]);
 
@@ -308,6 +310,16 @@ export default function Home() {
     }
   }
 
+  const handleContinueFinal = () => {
+    if (topic.length === 0) {
+      console.log("Err: Topic is empty.")
+      return 
+    }
+
+    shouldGenerateFinal.current = true;
+    continueFinalNotes();
+  }
+
   const handleInfoOverlay = () => {
     setShowInfoOverlay(!showInfoOverlay);
   }
@@ -375,12 +387,29 @@ export default function Home() {
     finalNoteAppend(newMessage);
   }
 
+  function continueFinalNotes() {
+    if (isGenerating.current) {
+      console.log('Notes are already being generated.');
+      return 
+    }
+    isGenerating.current = true;
+    console.log('Continuing final notes...');
+    // then generate notes
+    const newMessage : CreateMessage = {
+      role: 'user',
+      content: 'continue'
+    };
+    finalNoteAppend(newMessage);
+  }
+
+
   function handleGenerateTestTranscript() {
     if (isGenerating.current) {
       console.log('Notes are already being generated.');
       return 
     }
-    transcriptRef.current = testEconTranscript();
+    // transcriptRef.current = testEconTranscript();
+    transcriptRef.current = testShortTranscript();
     setDisplayTranscript(transcriptRef.current);
     setTopic('intermediate macroeconomics');
   }
@@ -447,6 +476,9 @@ export default function Home() {
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
           <FontAwesomeIcon icon={faWandMagicSparkles} onClick={handleGenerateFinal}/>
+        </div>
+        <div className={`${styles.navItem} ${styles.textButton}`}>
+          <FontAwesomeIcon icon={faForward} onClick={handleContinueFinal}/>
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleGenerateTestTranscript}>
           <FontAwesomeIcon icon={faVialCircleCheck}/>

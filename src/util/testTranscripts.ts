@@ -11,7 +11,14 @@ const testPhysicsTranscript = () => {
   `
 }
 
+const testShortTranscript = () => {
+  return `
+    Hi, my name is Marco. I am a software engineer. This is a notetaking project.
+  `
+}
+
 export {
   testEconTranscript,
   testPhysicsTranscript,
+  testShortTranscript
 }
