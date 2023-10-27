@@ -27,6 +27,7 @@ export default function Home() {
   const [isListening, setIsListening] = useState(false);
 
   const transcriptRef = useRef(transcript);
+  const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const transcriptIndexRef = useRef(0);
   const transcriptBacktrackIndex = 2000; // backtrack ~500 tokens
   const transcriptChunkLength = 6000; // 2k tokens per chunk
@@ -36,6 +37,8 @@ export default function Home() {
 
   const notesRef = useRef('');
   const summaryRef = useRef('');
+  const notesParagraphRef = useRef<HTMLParagraphElement>(null);
+  const summaryParagraphRef = useRef<HTMLParagraphElement>(null);
   const [customQuery, setCustomQuery] = useState('What are the top five key takeaways from the last few minutes of the lecture?'); // query for custom notes
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
@@ -181,6 +184,25 @@ export default function Home() {
     }
   }, [isListening]);
 
+  // auto scroll to bottom of transcript and notes
+  useEffect(() => {
+    if (transcriptParagraphRef.current) {
+      transcriptParagraphRef.current.scrollTop = transcriptParagraphRef.current.scrollHeight;
+    }
+  }, [displayTranscript]);
+  
+  useEffect(() => {
+    if (summaryParagraphRef.current) {
+      summaryParagraphRef.current.scrollTop = summaryParagraphRef.current.scrollHeight;
+    }
+  }, [displaySummary]);
+  
+  useEffect(() => {
+    if (notesParagraphRef.current) {
+      notesParagraphRef.current.scrollTop = notesParagraphRef.current.scrollHeight;
+    }
+  }, [displayNotes]);
+
 
   // handlers for starting and stopping the speech recognition and note taking
   const startListening = () => {
@@ -272,7 +294,7 @@ export default function Home() {
             <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
               <FontAwesomeIcon icon={faCopy} />
             </div>
-            <p>
+            <p ref={transcriptParagraphRef}>
               {displayTranscript}
             </p>
           </div>
@@ -281,7 +303,7 @@ export default function Home() {
             <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
               <FontAwesomeIcon icon={faCopy} />
             </div>
-            <p>
+            <p ref={summaryParagraphRef}>
               {displaySummary}
             </p>
           </div>
@@ -292,7 +314,7 @@ export default function Home() {
             <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
               <FontAwesomeIcon icon={faCopy} />
             </div>
-            <p>
+            <p ref={notesParagraphRef}>
               {displayNotes}
             </p>
           </div>
