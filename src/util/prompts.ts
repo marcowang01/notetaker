@@ -39,7 +39,6 @@ const finalNoteSystemPrompt = () => {
     - Concise yet comprehensive
     - Hierarchically structured with headings, subheadings, and various levels of bullet points
     - Clear and easy to understand
-    - No longer than a single page
     Ensure that important elements like formulas, examples, definitions, and references are distinctively highlighted.
   `;
 }
@@ -50,10 +49,14 @@ const finalNoteUserPrompt = (summary: string, topic: string) => {
   return `
     As a domain expert in ${topic}, you have been given a summarized version of a lecture about ${topic}. 
     Your task is to transform the summary into polished lecture notes. Here are some guidelines:
-    - The notes should capture the essence of the topic comprehensively.
+    - The notes should capture the details comprehensively.
     - Utilize a hierarchical structure with headings, subheadings, bullet points, and sub-bullets for clarity.
-    - Distinctly mark and highlight new formulas, examples, definitions, and references.
-    - Do not omit any critical details from the summary.
+    - Distinctly mark and highlight new formulas, examples, definitions, graphs and references.
+    - Do not omit any details or information from the summary.
+    - Bullet points should be short and to the point. Complete sentences are not required.
+    
+    Your focus is to organize the summary into a clear, easily readable and organized structure while maintaining details.
+    It is especially important to highlight new formulas, examples, definitions, graphs and references.
     ------------
     ${summary}
     ------------
