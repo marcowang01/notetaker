@@ -40,7 +40,7 @@ export default function Home() {
   const summaryRef = useRef('');
   const notesParagraphRef = useRef<HTMLParagraphElement>(null);
   const summaryParagraphRef = useRef<HTMLParagraphElement>(null);
-  const [customQuery, setCustomQuery] = useState('What are the top five key takeaways from the last few minutes of the lecture?'); // query for custom notes
+  const [customQuery, setCustomQuery] = useState('What are the top five key takeaways from the last few minutes of the lecture? Highlight new facts, formulas and definitions if applicable.'); // query for custom notes
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
   const [displayTranscript, setDisplayTranscript] = useState('');
@@ -326,6 +326,8 @@ export default function Home() {
 
     if (!isGenerating.current) {
       isGenerating.current = true;
+      console.log('Generating summary...');
+      
       const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
       // backtrack to include the ~1000 tokens before the current transcript index
       transcriptIndexRef.current = Math.max(transcriptRef.current.length - transcriptBacktrackIndex, 0)
@@ -349,6 +351,7 @@ export default function Home() {
       return 
     }
     isGenerating.current = true;
+    console.log('Generating custom notes...');
     // then generate notes
     const newMessage : CreateMessage = {
       role: 'user',
@@ -363,7 +366,7 @@ export default function Home() {
       return 
     }
     isGenerating.current = true;
-
+    console.log('Generating final notes...');
     // then generate notes
     const newMessage : CreateMessage = {
       role: 'user',
