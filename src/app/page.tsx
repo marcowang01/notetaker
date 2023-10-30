@@ -5,7 +5,7 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faForward } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
@@ -30,8 +30,8 @@ export default function Home() {
   const transcriptRef = useRef(transcript);
   const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const transcriptIndexRef = useRef(0);
-  const transcriptBacktrackIndex = 300 * 4; // backtrack 300 tokens
-  const transcriptChunkLength = 1000 * 4; // 1.0k tokens per chunk
+  const transcriptBacktrackIndex = 200 * 4; // backtrack 300 tokens
+  const transcriptChunkLength = 800 * 4; // 1.0k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
   const timeStampInterval = 30000; // 30 seconds in milliseconds
@@ -280,13 +280,25 @@ export default function Home() {
   }
 
   // Handler for input changes
-  const handleTopicInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
+  const handleTopicInputChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
     setTopic(e.target.value);
   };
+
+  const handleQueryInputChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+    setCustomQuery(e.target.value);
+  }
 
   const handleGenerateCustom = () => {
     if (topic.length === 0) {
       console.log("Err: Topic is empty.")
+      return 
+    }
+    if (customQuery.length === 0) {
+      console.log("Err: Query is empty.")
+      return 
+    }
+    if (summaryRef.current.length === 0) {
+      console.log("Err: Summary is empty.")
       return 
     }
 
@@ -302,6 +314,10 @@ export default function Home() {
       console.log("Err: Topic is empty.")
       return 
     }
+    if (summaryRef.current.length === 0) {
+      console.log("Err: Summary is empty.")
+      return 
+    }
 
     shouldGenerateFinal.current = true;
     const success = generateSummary();
@@ -313,6 +329,10 @@ export default function Home() {
   const handleContinueFinal = () => {
     if (topic.length === 0) {
       console.log("Err: Topic is empty.")
+      return 
+    }
+    if (notesRef.current.length === 0) {
+      console.log("Err: Notes is empty.")
       return 
     }
 
@@ -449,7 +469,7 @@ export default function Home() {
           </div>
         </div>
         <div className={styles.LRContainer}>
-          <div className={styles.textDisplay}> 
+          <div className={styles.textDisplay} style={{flex: 2}}> 
             Notes:
             <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
               <FontAwesomeIcon icon={faCopy} />
@@ -458,16 +478,26 @@ export default function Home() {
               {displayNotes}
             </p>
           </div>
+          <div className={styles.textDisplay} style={{flex: 1}}> 
+            User Inputs:
+            <textarea 
+              placeholder='Enter topic here'
+              value={topic}
+              onChange={handleTopicInputChange}
+              disabled={isListening}
+              style={{flex: 1}}
+            />
+            <textarea 
+              placeholder='Enter takeaways question/instruction here'
+              value={customQuery}
+              onChange={handleQueryInputChange}
+              disabled={isGenerating.current}
+              style={{flex: 3}}
+            />
+          </div>
         </div>
       </main>
       <div className={styles.navbar}>
-        <input 
-          className={styles.navItem}
-          placeholder='Enter topic here'
-          value={topic}
-          onChange={handleTopicInputChange}
-          disabled={isListening}
-        />
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleStartStop}>
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
         </div>
@@ -478,7 +508,7 @@ export default function Home() {
           <FontAwesomeIcon icon={faWandMagicSparkles} onClick={handleGenerateFinal}/>
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
-          <FontAwesomeIcon icon={faForward} onClick={handleContinueFinal}/>
+          <FontAwesomeIcon icon={faHandPointRight} onClick={handleContinueFinal}/>
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleGenerateTestTranscript}>
           <FontAwesomeIcon icon={faVialCircleCheck}/>
@@ -515,12 +545,14 @@ export default function Home() {
 // mistral 7b dolphin: https://huggingface.co/ehartford/dolphin-2.1-mistral-7b
 // fast inference with modal: https://www.andrewhhan.com/2023/10/25/how-i-replaced-my-openai-spend-with-oss-and-modal.html
 // use blank tokens for confusing parts (then use gpt4 to fill the gaps at the end)
+// modal, anyscale
 
 // user + content management:
 // - add database to store summary and store user sessions
 // - add database to store topic and vocab list (per user)
 
 // UI improvements:
+// - add pages for auth
 // - use shadcn ui
 // - auto scroll
 // - side bar

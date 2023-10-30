@@ -5,7 +5,7 @@ import styles from './infoOverlay.module.css'
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight } from '@fortawesome/free-solid-svg-icons';
 
 interface TutorialOverlayProps {
   show: boolean;
@@ -17,12 +17,13 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
 
   const infoItems: Record<string, IconDefinition> = {
     "Open This Menu": faCircleInfo,
-    "Click email to go to sign out page": faEnvelope,
+    "Click to go to sign out page": faEnvelope,
     "Copy Text": faCopy,
     "Start/Pause Speech Recognition": faPlay,
     "Shows most recent live transcript": faEarListen,
-    "Generate Takeaways using GPT-3.5": faWandMagic,
-    "Generate Final Notes using GPT-4": faWandMagicSparkles,
+    "Generate custom takeaways using GPT-3.5": faWandMagic,
+    "Generate ginal notes using GPT-4": faWandMagicSparkles,
+    "Continue generating final notes": faHandPointRight,
     "Generate Debug Transcipt": faVialCircleCheck,
   }
 
