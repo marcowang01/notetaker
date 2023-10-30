@@ -546,6 +546,7 @@ export default function Home() {
 // fast inference with modal: https://www.andrewhhan.com/2023/10/25/how-i-replaced-my-openai-spend-with-oss-and-modal.html
 // use blank tokens for confusing parts (then use gpt4 to fill the gaps at the end)
 // modal, anyscale
+// error recovery. on error, the transcript index needs to be reset
 
 // user + content management:
 // - add database to store summary and store user sessions
