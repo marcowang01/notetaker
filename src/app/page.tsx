@@ -442,9 +442,11 @@ export default function Home() {
           <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
-          <Link href="/api/auth/signout">
-            <FontAwesomeIcon icon={faEnvelope}/> {` ${session?.user?.email}`}
-          </Link>
+          {session?.user?.email && 
+            <Link href="/api/auth/signout">
+              <FontAwesomeIcon icon={faEnvelope} fixedWidth/> {` ${session?.user?.email}`}
+            </Link>
+          }
         </div>
       </div>
       <main className={styles.main}>
