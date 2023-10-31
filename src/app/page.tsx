@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, ChangeEvent } from 'react'
 import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { useChat, Message, CreateMessage } from 'ai/react'
+import { Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
@@ -18,7 +18,7 @@ import {
   customSystemPrompt,
   customUserPrompt
 } from '../util/prompts'
-
+import useCustomChat  from '../hooks/chat'
 import styles from './page.module.css'
 import InfoOverlay from './components/infoOverlay';
 
@@ -70,66 +70,23 @@ export default function Home() {
     isGenerating.current = false;
   }
 
-  const { messages: summaryMessages, append: summaryAppend } = useChat({ 
-    api: '/api/openai',
-    initialMessages: [
-      {
-        id: '0',
-        role: 'system',
-        content: summarySystemPrompt()
-      }
-    ],
-    onFinish: (message: Message) => {
-      console.log('Chat generation finished with message: ', message);
-      isGenerating.current = false;
-  
-      if (shouldGenerateCustom.current) {
-        shouldGenerateCustom.current = false;
-        generateCustomNotes();
-      } else if (shouldGenerateFinal.current) {
-        shouldGenerateFinal.current = false;
-        generateFinalNotes();
-      }
-    },
+  const { messages: summaryMessages, append: summaryAppend } = useCustomChat({
+    systemPrompt: summarySystemPrompt(),
+    onFinish: onSummaryFinish,
     onError: onError
-  });
+  })
 
-  const { messages: customMessages, append: customAppend } = useChat({ 
-    api: '/api/openai',
-    initialMessages: [
-      {
-        id: '0',
-        role: 'system',
-        content: customSystemPrompt()
-      }
-    ],
-    onFinish: (message: Message) => {
-      console.log('Chat generation finished with message: ', message);
-      isGenerating.current = false;
-      shouldGenerateCustom.current = false;
-    },
-    onError: onError,
-  });
-
-  const { messages: finalNoteMessages, append: finalNoteAppend } = useChat({ 
-    api: '/api/openai',
-    initialMessages: [
-      {
-        id: '0',
-        role: 'system',
-        content: finalNoteSystemPrompt()
-      }
-    ],
-    onFinish: (message: Message) => {
-      console.log('Chat generation finished with message: ', message);
-      isGenerating.current = false;
-      shouldGenerateFinal.current = false;
-    },
-    onError: onError,
-    body: {
-      model: 'gpt-4',
-    }
-  });
+  const { messages: customMessages, append: customAppend } = useCustomChat({
+    systemPrompt: customSystemPrompt(),
+    onFinish: onCustomNotesFinish,
+    onError: onError
+  }) 
+  
+  const { messages: finalNoteMessages, append: finalNoteAppend } = useCustomChat({
+    systemPrompt: finalNoteSystemPrompt(),
+    onFinish: onFinalNotesFinish,
+    onError: onError
+  })
 
   // update the transcript displayed on the page on detecting new speech
   // see if new summary needs to be generated
@@ -260,7 +217,6 @@ export default function Home() {
 
   const stopListening = () => {
     SpeechRecognition.stopListening()
-    setLectureStartTime(null);
     console.log('Speech recognition stopped.')
     return false
   }
@@ -428,6 +384,31 @@ export default function Home() {
     finalNoteAppend(newMessage);
   }
 
+  function onSummaryFinish(message: Message) {
+    console.log('Sumamry generation finished with message: ', message);
+    isGenerating.current = false;
+
+    if (shouldGenerateCustom.current) {
+      shouldGenerateCustom.current = false;
+      generateCustomNotes();
+    } else if (shouldGenerateFinal.current) {
+      shouldGenerateFinal.current = false;
+      generateFinalNotes();
+    }
+  }
+
+  function onCustomNotesFinish(message: Message) {
+    console.log('Custom generation finished with message: ', message);
+    isGenerating.current = false;
+    shouldGenerateCustom.current = false;
+  }
+
+  function onFinalNotesFinish(message: Message) {
+    console.log('Final note generation finished with message: ', message);
+    isGenerating.current = false;
+    shouldGenerateFinal.current = false;
+  }
+
 
   function handleGenerateTestTranscript() {
     if (isGenerating.current) {
@@ -437,7 +418,7 @@ export default function Home() {
     // transcriptRef.current = testEconTranscript();
     transcriptRef.current = testShortTranscript();
     setDisplayTranscript(transcriptRef.current);
-    setTopic('intermediate macroeconomics');
+    setTopic('notetaking app');
   }
 
   function handleDefaultCustomQuery() {
