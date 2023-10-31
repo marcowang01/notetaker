@@ -534,8 +534,9 @@ export default function Home() {
 // TODO:
 // 4. deepgram + custom vocab
 // 5. toast notifications 
-// 5.5 add loading indicators for generating notes
-// 6. start user testing (feedback form super easy)
+// 5. status bar + spinnig gear + error toasts
+// 6. multiple chatGPT experts? (fact extraction, high level summary, term correction)
+// 7. user test 
 
 // 6. use better model 
 
