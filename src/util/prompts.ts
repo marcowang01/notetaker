@@ -79,8 +79,8 @@ const customUserPrompt = (summary: string, topic: string, query: string) => {
   ${summary}
   ------------
   Use the summary provided to craft a concise and accurate response to the question. 
-  Keep your response concise and directly related to the query.
-
+  Keep your response brief and directly related to the query.
+  Use bullet points and sub-bullet points to organize your response. Complete sentences are not required.
   Take a deep breath, think about this step by step and make sure you get it right.
 
   RESPONSE:`;

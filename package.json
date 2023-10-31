@@ -22,7 +22,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-speech-recognition": "^3.10.0",
-    "regenerator-runtime": "^0.14.0"
+    "regenerator-runtime": "^0.14.0",
+    "zustand": "^4.4.5"
   },
   "devDependencies": {
     "@types/node": "^20",

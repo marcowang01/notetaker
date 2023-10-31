@@ -30,20 +30,21 @@ export default function Home() {
   const second = 1000;
   const minute = 60 * second;
 
-  const transcriptRef = useRef(transcript);
-  const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
-  const transcriptIndexRef = useRef(0);
   const transcriptBacktrackIndex = 400 * 4; // backtrack 300 tokens
   const transcriptChunkLength = 1600 * 4; // 1.0k tokens per chunk
+  const timeStampInterval = 30 * second; // 30 seconds in milliseconds
+
+  const transcriptIndexRef = useRef(0);
+  const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
-  const timeStampInterval = 30 * second; // 30 seconds in milliseconds
 
   const notesRef = useRef('');
   const summaryRef = useRef('');
+  const transcriptRef = useRef(transcript);
   const notesParagraphRef = useRef<HTMLParagraphElement>(null);
   const summaryParagraphRef = useRef<HTMLParagraphElement>(null);
-  const [customQuery, setCustomQuery] = useState(''); // query for custom notes
+  const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
   const [displayTranscript, setDisplayTranscript] = useState('');
@@ -52,9 +53,9 @@ export default function Home() {
   const shouldGenerateCustom = useRef(false);
   const shouldGenerateFinal = useRef(false);
 
-  const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
   
   const [topic, setTopic] = useState('');
+  const [customQuery, setCustomQuery] = useState(''); // query for custom notes
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
 
   const { data: session } = useSession({
@@ -571,6 +572,9 @@ export default function Home() {
 // user + content management:
 // - add database to store summary and store user sessions
 // - add database to store topic and vocab list (per user)
+
+// state management:
+// - use redux or zustand
 
 // UI improvements:
 // - add pages for auth
