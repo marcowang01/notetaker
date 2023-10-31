@@ -1,25 +1,23 @@
-const { createClient } = require("@deepgram/sdk");
-const client = createClient(process.env.DEEPGRAM_API_KEY);
+import { Deepgram } from "@deepgram/sdk";
+const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY || "");
 
 const getProjectId = async () => {
-  const { result, error } = await client.manage.getProjects();
+  const result = await deepgram.projects.list();
 
-  if (error) {
-    throw error;
+  if (result.err_msg) {
+    throw new Error(result.err_msg);
   }
 
   return result.projects[0].project_id;
 };
 
 const getTempApiKey = async (projectId: string) => {
-  const { result, error } = await client.manage.createProjectKey(projectId, {
-    comment: "short lived",
-    scopes: ["usage:write"],
-    time_to_live_in_seconds: 20,
-  });
+  const scopes = ["member", "onprem:products"];
+  const comment = "temp key for testing";
+  const result = await deepgram.keys.create(projectId, comment, scopes);
 
-  if (error) {
-    throw error;
+  if (result.err_msg) {
+    throw new Error(result.err_msg);
   }
 
   return result;
@@ -28,7 +26,7 @@ const getTempApiKey = async (projectId: string) => {
 
 export async function GET(req: Request) {
   const projectId = await getProjectId();
-  const key = await getTempApiKey(projectId);
+  const result = await getTempApiKey(projectId);
 
-  return Response.json({ key });
+  return Response.json(result);
 }

@@ -69,15 +69,19 @@ const finalNoteUserPrompt = (summary: string, topic: string) => {
 // for generating answers to questions on the fly based on the existing summary
 const customUserPrompt = (summary: string, topic: string, query: string) => {
   return `
+  Take a deep breath, think about this step by step and make sure you get it right.
+
   Based on the summary for a lecture on the topic of ${topic}, you are to answer the following question: 
   "${query}"
   ------------
   ${summary}
   ------------
-  Use the summary provided to craft a concise and accurate response to the question. 
-  If the answer isn't present in the summary, state "Answer not found in the summary." Only then, use your own knowledge to answer the question.
+  Use the summary provided to help you craft a concise and accurate response to the question. 
 
-  Take a deep breath, think about this step by step and make sure you get it right.
+  If you cannot find relevant information from the summary, please respond with your own knolwedge on the topic as you are an expert.
+  In this case you should respond with the phrase "No relevant information from the summary, but here is my own expert knowledge on the topic:"
+  
+  unless instructed otherwise, keep your response concise and directly related to the query.
 
   RESPONSE:`;
 }

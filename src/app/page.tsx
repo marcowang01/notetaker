@@ -18,6 +18,12 @@ import {
   customSystemPrompt,
   customUserPrompt
 } from '../util/prompts'
+import {
+  openMicrophone,
+  closeMicrophone,
+  getMicrophone,
+  getDeepgramSocket,
+} from '../util/microphone'
 
 import styles from './page.module.css'
 import InfoOverlay from './components/infoOverlay';
@@ -25,7 +31,12 @@ import InfoOverlay from './components/infoOverlay';
 export default function Home() {
   
   const { transcript, finalTranscript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const useDeepgram = useRef(true);
   const [isListening, setIsListening] = useState(false);
+  const [socket, setSocket] = useState<WebSocket | null>(null); // deepgram socket
+  const [dgTranscript, setDgTranscript] = useState(''); // deepgram transcript
+  const [dgFinalTranscript, setDgFinalTranscript] = useState(''); // deepgram final transcript
+  const microphone = useRef<MediaRecorder | null>(null);
 
   const transcriptRef = useRef(transcript);
   const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
@@ -43,7 +54,8 @@ export default function Home() {
   const [customQuery, setCustomQuery] = useState('Highlight new facts, examples, formulas and definitions presented in the last few minutes of the lecture. Then, write the top 5 takeaways from the summary.'); // query for custom notes
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
-  const [displayTranscript, setDisplayTranscript] = useState('');
+  const [displayFinalTranscript, setDisplayFinalTranscript] = useState('');
+  const [displayLiveTranscript, setDisplayLiveTranscript] = useState(''); // display live transcript [in progress
 
   const isGenerating = useRef(false);
   const shouldGenerateCustom = useRef(false);
@@ -132,36 +144,29 @@ export default function Home() {
   // update the transcript displayed on the page on detecting new speech
   // see if new summary needs to be generated
   useEffect(() => {
-    transcriptRef.current = finalTranscript;
-    if (transcriptRef.current.length > 0 && lectureStartTime !== null) {
-      // check if it has been at least 30 seconds since the last timestamp
-      const currentTime = Date.now();
-      if (currentTime - lectureStartTime - lastTimeStamp.current >= timeStampInterval) {
-        const minutes = Math.floor((currentTime - lectureStartTime) / minute).toString().padStart(2, '0');
-        const seconds = Math.floor(((currentTime - lectureStartTime) % minute) / second).toString().padStart(2, '0');
-        const timeString = `(${minutes}:${seconds})`;
-        lastTimeStamp.current = lastTimeStamp.current + timeStampInterval;
+    let newTranscript = ""
+    if (useDeepgram.current) {
+      newTranscript = dgFinalTranscript;
+    } else {
+      newTranscript = finalTranscript;
+    }
+    transcriptRef.current = newTranscript;
 
-        const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
-        lastTranscriptIndex.current = transcriptRef.current.length;
-        // display timestamp every 30 seconds
-        setDisplayTranscript(prevDisplay => {
-          return prevDisplay + newTranscriptSegment + '\n' + timeString + ' ';
-        });
-      } else {
-        const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
-        lastTranscriptIndex.current = transcriptRef.current.length;
-        setDisplayTranscript(prevDisplay => {
-          return prevDisplay + newTranscriptSegment;
-        });
-      }
 
-      // check if 4000 tokens have been added since last summary
-      if (transcriptRef.current.length - transcriptIndexRef.current > transcriptChunkLength) {
-        generateSummary();
-      }
-    } 
-  }, [finalTranscript]);
+    generateDisplayTranscript(newTranscript);
+
+  }, [finalTranscript, dgFinalTranscript]);
+
+  // update navbar live intermediate transcript on detecting new speech
+  useEffect(() => {
+    if (useDeepgram.current) {
+      const liveTranscript = dgFinalTranscript + dgTranscript;
+      setDisplayLiveTranscript(liveTranscript.slice(-50));
+    } else {
+      setDisplayLiveTranscript(transcript.slice(-50));
+    }
+
+  }, [transcript, dgTranscript, dgFinalTranscript]);
 
   // update the running summary on new messages from the assistant
   useEffect(() => {
@@ -223,7 +228,7 @@ export default function Home() {
     if (transcriptParagraphRef.current) {
       transcriptParagraphRef.current.scrollTop = transcriptParagraphRef.current.scrollHeight;
     }
-  }, [displayTranscript]);
+  }, [displayFinalTranscript]);
   
   useEffect(() => {
     if (summaryParagraphRef.current) {
@@ -237,16 +242,69 @@ export default function Home() {
     }
   }, [displayNotes]);
 
-
   // handlers for starting and stopping the speech recognition and note taking
-  const startListening = () => {
+  const startListening = async () => {
     // checks if topic is empty
     if (topic.length === 0) {
       console.log("Err: Topic is empty.")
       return false
     }
+    // check what speech recognition api to use (web speech api or deepgram)
     // checks if browser supports speech recognition
-    if (browserSupportsSpeechRecognition) {
+    if (useDeepgram.current) {
+      try {
+        console.log('establishing deepgram socket...')
+        const dgSocket = await getDeepgramSocket();
+
+        dgSocket.onopen = async () => {
+          console.log("client: connected to websocket. starting microphone...");
+
+          microphone.current = await getMicrophone();
+          await openMicrophone(microphone.current, dgSocket);
+        }
+
+        dgSocket.onerror = (e) => {
+          console.error(e);
+        }
+
+        dgSocket.onclose = (e) => {
+          console.log(e);
+        }
+
+        dgSocket.onmessage = (e) => {
+          const data = JSON.parse(e.data);
+          // console.log('Socket data received: ', data);
+
+          if (data.type === 'Results') {
+            const transcript = data.channel.alternatives[0].transcript;
+            const isFinal = data.is_final 
+
+            if (isFinal) {
+              setDgFinalTranscript(prevTranscript => {
+                return prevTranscript + ' ' + transcript;
+              });
+              setDgTranscript('');
+            } else {
+              setDgTranscript(transcript);
+            }
+
+            // console.log('Transcript: ', transcript);
+          }
+        }
+        setSocket(dgSocket);
+      } catch (err) {
+        // clean up everything on error
+        if (microphone.current) {
+          await closeMicrophone(microphone.current);
+        }
+        setSocket(null);
+
+        console.log('Error establishing deepgram socket: ', err);
+        return false;
+      }
+
+      return true
+    } else if (browserSupportsSpeechRecognition) {
       SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
       console.log('Speech recognition started.')
       return true
@@ -256,18 +314,28 @@ export default function Home() {
     }
   }
 
-  const stopListening = () => {
-    SpeechRecognition.stopListening()
+  const stopListening = async () => {
+    if (useDeepgram.current) {
+      if (microphone.current) {
+        socket?.send(JSON.stringify({ type: "CloseStream" }));
+
+        await closeMicrophone(microphone.current);
+        setSocket(null);
+      }
+    } else {
+      SpeechRecognition.stopListening()
+    }
+
     setLectureStartTime(null);
     console.log('Speech recognition stopped.')
     return false
   }
 
-  const handleStartStop = () => {
+  const handleStartStop = async () => {
     if (isListening) {
-      setIsListening(stopListening())
+      setIsListening(await stopListening())
     } else {
-      setIsListening(startListening())
+      setIsListening(await startListening())
     }
   }
 
@@ -297,8 +365,8 @@ export default function Home() {
       console.log("Err: Query is empty.")
       return 
     }
-    if (summaryRef.current.length === 0) {
-      console.log("Err: Summary is empty.")
+    if (transcriptRef.current.length === 0) {
+      console.log("Err: transcript is empty.")
       return 
     }
 
@@ -314,8 +382,8 @@ export default function Home() {
       console.log("Err: Topic is empty.")
       return 
     }
-    if (summaryRef.current.length === 0) {
-      console.log("Err: Summary is empty.")
+    if (transcriptRef.current.length === 0) {
+      console.log("Err: transcript is empty.")
       return 
     }
 
@@ -346,6 +414,38 @@ export default function Home() {
 
   const handleCloseInfoOverlay = () => {
     setShowInfoOverlay(false);
+  }
+
+  function generateDisplayTranscript(newTranscript: string) {
+    transcriptRef.current = newTranscript;
+    if (transcriptRef.current.length > 0 && lectureStartTime !== null) {
+      // check if it has been at least 30 seconds since the last timestamp
+      const currentTime = Date.now();
+      if (currentTime - lectureStartTime - lastTimeStamp.current >= timeStampInterval) {
+        const minutes = Math.floor((currentTime - lectureStartTime) / minute).toString().padStart(2, '0');
+        const seconds = Math.floor(((currentTime - lectureStartTime) % minute) / second).toString().padStart(2, '0');
+        const timeString = `(${minutes}:${seconds})`;
+        lastTimeStamp.current = lastTimeStamp.current + timeStampInterval;
+
+        const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
+        lastTranscriptIndex.current = transcriptRef.current.length;
+        // display timestamp every 30 seconds
+        setDisplayFinalTranscript(prevDisplay => {
+          return prevDisplay + newTranscriptSegment + '\n' + timeString + ' ';
+        });
+      } else {
+        const newTranscriptSegment = transcriptRef.current.slice(lastTranscriptIndex.current);
+        lastTranscriptIndex.current = transcriptRef.current.length;
+        setDisplayFinalTranscript(prevDisplay => {
+          return prevDisplay + newTranscriptSegment;
+        });
+      }
+
+      // check if 4000 tokens have been added since last summary
+      if (transcriptRef.current.length - transcriptIndexRef.current > transcriptChunkLength) {
+        generateSummary();
+      }
+    }
   }
 
   // generate summary from transcript, returns true if successful
@@ -430,7 +530,7 @@ export default function Home() {
     }
     // transcriptRef.current = testEconTranscript();
     transcriptRef.current = testShortTranscript();
-    setDisplayTranscript(transcriptRef.current);
+    setDisplayFinalTranscript(transcriptRef.current);
     setTopic('intermediate macroeconomics');
   }
 
@@ -457,7 +557,7 @@ export default function Home() {
               <FontAwesomeIcon icon={faCopy} />
             </div>
             <p ref={transcriptParagraphRef}>
-              {displayTranscript}
+              {displayFinalTranscript}
             </p>
           </div>
           <div className={styles.textDisplay}>
@@ -519,7 +619,7 @@ export default function Home() {
           {transcriptRef.current.length - transcriptIndexRef.current} / {transcriptChunkLength}
         </div>
         <div className={`${styles.navItem}`}>
-          <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
+          <FontAwesomeIcon icon={faEarListen} />{`: ...${displayLiveTranscript}`}
         </div>
       </div>
     </div>
@@ -529,8 +629,8 @@ export default function Home() {
 
 // TODO:
 // 4. deepgram + custom vocab
-// 5. toast notifications 
-// 5.5 add loading indicators for generating notes
+// 5. status bar + spinnig gear + error toasts
+// 6. multiple chatGPT experts? (fact extraction, high level summary, term correction)
 // 6. start user testing (feedback form super easy)
 
 // 6. use better model 
