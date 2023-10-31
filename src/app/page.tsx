@@ -309,7 +309,7 @@ export default function Home() {
   // generate summary from transcript, returns true if successful
   function generateSummary() {
     // check if there are new transcript segments to generate summary from
-    if (transcriptRef.current.length - transcriptBacktrackIndex === transcriptIndexRef.current) {
+    if (transcriptRef.current.length - transcriptIndexRef.current === transcriptBacktrackIndex) {
       console.log('No new transcript segments to generate summary from.');
       return false;
     }
@@ -418,7 +418,8 @@ export default function Home() {
     // transcriptRef.current = testEconTranscript();
     transcriptRef.current = testShortTranscript();
     setDisplayTranscript(transcriptRef.current);
-    setTopic('notetaking app');
+    setTopic('notetaking web app');
+    setCustomQuery('Write the top 5 takeaways from the lecture so far.')
   }
 
   function handleDefaultCustomQuery() {
@@ -481,7 +482,7 @@ export default function Home() {
               placeholder='Enter topic here'
               value={topic}
               onChange={handleTopicInputChange}
-              disabled={isListening}
+              disabled={isListening || isGenerating.current}
               style={{flex: 1}}
             />
             <textarea 
@@ -528,7 +529,6 @@ export default function Home() {
 // TODO:
 // should display real time and lecture start time?
 // 5. toast notifications 
-// 5. re org the code!!
 // 5. status bar + spinnig gear + error toasts
 // 6. multiple chatGPT experts? (fact extraction, high level summary, term correction)
 // 7. user test 
@@ -538,7 +538,7 @@ export default function Home() {
 // 7. mvp success --> refactor code + use shadcn ui
 
 // sr improvements:
-// - use deepgram 
+// - use deepgram (less accurate from testing)
 // - generate vocab list from input topic
 
 // notes improvements:
@@ -554,9 +554,6 @@ export default function Home() {
 // - add database to store summary and store user sessions
 // - add database to store topic and vocab list (per user)
 
-// state management:
-// - use redux or zustand
-
 // UI improvements:
 // - add pages for auth
 // - use shadcn ui
@@ -570,3 +567,4 @@ export default function Home() {
 // - refactor code into multiple files (navbar, text displays, etc.)
 // - better state transitions between generation
 // - better testing pipeline and error handling
+// - use redux or zustand for state management
