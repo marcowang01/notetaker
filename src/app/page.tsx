@@ -530,7 +530,7 @@ export default function Home() {
 // should display real time and lecture start time?
 // 5. toast notifications 
 // 5. status bar + spinnig gear + error toasts
-// 7. user test 
+// 7. user test (download button)
 
 // 6. use better model 
 // 7. multiple chatGPT experts? (fact extraction, high level summary, term correction)
