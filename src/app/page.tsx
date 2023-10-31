@@ -30,8 +30,8 @@ export default function Home() {
   const transcriptRef = useRef(transcript);
   const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const transcriptIndexRef = useRef(0);
-  const transcriptBacktrackIndex = 200 * 4; // backtrack 300 tokens
-  const transcriptChunkLength = 800 * 4; // 1.0k tokens per chunk
+  const transcriptBacktrackIndex = 400 * 4; // backtrack 300 tokens
+  const transcriptChunkLength = 1600 * 4; // 1.0k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
   const timeStampInterval = 30000; // 30 seconds in milliseconds
@@ -297,8 +297,8 @@ export default function Home() {
       console.log("Err: Query is empty.")
       return 
     }
-    if (summaryRef.current.length === 0) {
-      console.log("Err: Summary is empty.")
+    if (transcriptRef.current.length === 0) {
+      console.log("Err: transcript is empty.")
       return 
     }
 
@@ -314,8 +314,8 @@ export default function Home() {
       console.log("Err: Topic is empty.")
       return 
     }
-    if (summaryRef.current.length === 0) {
-      console.log("Err: Summary is empty.")
+    if (transcriptRef.current.length === 0) {
+      console.log("Err: transcript is empty.")
       return 
     }
 
@@ -370,6 +370,7 @@ export default function Home() {
       };
 
       // append to chat
+      console.log('New summary message prompt: ', newMessage)
       summaryAppend(newMessage);
 
       return true
@@ -389,6 +390,7 @@ export default function Home() {
       role: 'user',
       content: customUserPrompt(summaryRef.current, topic, customQuery)
     };
+    console.log('New custom notes message prompt: ', newMessage)
     customAppend(newMessage);
   }
 
@@ -404,6 +406,7 @@ export default function Home() {
       role: 'user',
       content: finalNoteUserPrompt(summaryRef.current, topic)
     };
+    console.log('New final notes message prompt: ', newMessage)
     finalNoteAppend(newMessage);
   }
 
@@ -419,6 +422,7 @@ export default function Home() {
       role: 'user',
       content: 'continue'
     };
+    console.log('New final notes continue message prompt: ', newMessage)
     finalNoteAppend(newMessage);
   }
 
