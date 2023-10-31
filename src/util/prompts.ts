@@ -12,22 +12,24 @@ const summaryUserPrompt = (transcript: string, existing_summary: string, topic: 
   return `
   Assume you're an expert in the area of ${topic}. 
   You are tasked with refining and appending to an existing summary based on new lecture content. 
+
+  Guidelines:
+  Given the new context, add to or refine the original summary. Do not generate redundant content that already exists in the summary.
+  Focus on using succint language but retaining a detailed summary, presenting new facts and ideas.
+  New example problems, facts, formulas, definitions, and references should be marked distinctively and completely.
+  The summary should allow a reader to understand the lecture so far completely without having to read the entire transcript.
+  You should use bullet points and sub-bullet points to organize the summary. Complete sentences are not required.
+  If the new context isn't useful, respond with the phrase "SUMMARY: no new content".
+
   If there is no existing summary, please start a new one based on the lecture transcript.
   Here is the current summary: ${existing_summary || "No existing summary provided"}.
   
-  Evaluate the most recent lecture transcript below for any noteworthy content.
+  Evaluate the most recent lecture transcript below and generate the summary using the guidelines above.
   ------------
   ${transcript}
   ------------
-  Given the new context, add to or refine the original summary. Do not generate redundant content that already exists in the summary.
-  Your goal is to reduce the length of the transcript but should be complete retain all the important information and details.
-  The summary should allow a reader to understand the lecture so far completely without having to read the entire transcript.
-  You should use a bullet points and sub-bullet points to organize the summary. Complete sentences are not required.
-  If the new context isn't useful, respond with the phrase "CONCISE SUMMARY: no new content".
-  New example problems, facts, formulas, definitions, and references should be marked distinctively and completely.
 
-
-  CONCISE SUMMARY:
+  SUMMARY:
   `;
 }
 
@@ -68,15 +70,14 @@ const finalNoteUserPrompt = (summary: string, topic: string) => {
 // for generating answers to questions on the fly based on the existing summary
 const customUserPrompt = (summary: string, topic: string, query: string) => {
   return `
-  Based on the summary for a lecture on the topic of ${topic}, you are to answer the following question: 
+  Based on the recent summary for a lecture on the topic of ${topic}, you are to answer the following question: 
   "${query}"
   ------------
+  Lecture summary:
   ${summary}
   ------------
-  Use the summary provided to craft a concise and accurate response to the question. 
-  If the answer isn't present in the summary, state "Answer not found in the summary." Only then, use your own knowledge to answer the question.
-
-  Take a deep breath, think about this step by step and make sure you get it right.
+  Use the summary provided as context to help you craft a concise and accurate response to the question. 
+  unless instructed otherwise, keep your response concise and directly related to the query.
 
   RESPONSE:`;
 }

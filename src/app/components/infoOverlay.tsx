@@ -17,12 +17,12 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
 
   const infoItems: Record<string, IconDefinition> = {
     "Open This Menu": faCircleInfo,
-    "Click to go to sign out page": faEnvelope,
-    "Copy Text": faCopy,
+    "Link to sign out page": faEnvelope,
+    "Copy Text in text box": faCopy,
     "Start/Pause Speech Recognition": faPlay,
     "Shows most recent live transcript": faEarListen,
-    "Generate custom takeaways using GPT-3.5": faWandMagic,
-    "Generate ginal notes using GPT-4": faWandMagicSparkles,
+    "Generate custom answer using GPT-3.5": faWandMagic,
+    "Generate final notes using GPT-4": faWandMagicSparkles,
     "Continue generating final notes": faHandPointRight,
     "Generate Debug Transcipt": faVialCircleCheck,
   }
@@ -42,7 +42,10 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.tutorialContent} onClick={e => e.stopPropagation()}> 
+      <div className={styles.tutorialContent}> 
+        <div style={{opacity: "0.7", fontStyle: "italic"}}>
+          Click anywhere to close
+        </div>
         {Object.keys(infoItems).map((key) => <InfoItem key={key} icon={infoItems[key]} text={key} />)}
       </div>
     </div>
