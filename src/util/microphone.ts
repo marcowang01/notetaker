@@ -50,13 +50,26 @@ const getDeepgramSocket = async () => {
   
   const key = await getTempDeepGramApiKey();
 
+  const networkingWords = [
+    "action", "api", "application", "area", "automation", "centralized", "chaining", "cloud", 
+    "control", "controller", "data", "decentralized", "discovery", "driven", "entry", "extensible", 
+    "fabric", "flow", "forwarding", "function", "gateway", "graybox", "hypervisor", "infrastructure", 
+    "intentbased", "interface", "lan", "logical", "manager", "match", "network", "networking", "nfv", 
+    "northbound", "onos", "open", "opendaylight", "openflow", "operating", "orchestration", "overlay", 
+    "physical", "plane", "policy", "proactive", "programmability", "programming", "protocol", 
+    "provisioning", "reactive", "representational", "rest", "rule", "sdn", "sdwan", "service", 
+    "setup", "slicing", "softwaredefined", "southbound", "state", "switching", "system", "table", 
+    "time", "topology", "transfer", "tunnelling", "underlay", "vim", "virtual", "virtualization", 
+    "virtualized", "vnf", "vswitch", "vxlan", "whitebox", "wide", "zerotouch"
+];
+
   const params = {
     language: 'en-US',
     punctuate: true,
     smart_format: true,
     numerals: true,
     interim_results: true,
-    keywords: ['econ', 'physics'],
+    keywords: networkingWords,
   };
 
   // Convert the parameters into a query string format
