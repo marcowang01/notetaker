@@ -5,7 +5,7 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useChat, Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
@@ -27,6 +27,9 @@ export default function Home() {
   const { transcript, finalTranscript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
 
+  const second = 1000;
+  const minute = 60 * second;
+
   const transcriptRef = useRef(transcript);
   const transcriptParagraphRef = useRef<HTMLParagraphElement>(null);
   const transcriptIndexRef = useRef(0);
@@ -34,13 +37,13 @@ export default function Home() {
   const transcriptChunkLength = 1600 * 4; // 1.0k tokens per chunk
   const lastTranscriptIndex = useRef(0); // for generating time stamps
   const lastTimeStamp = useRef(0); // for generating time stamps
-  const timeStampInterval = 30000; // 30 seconds in milliseconds
+  const timeStampInterval = 30 * second; // 30 seconds in milliseconds
 
   const notesRef = useRef('');
   const summaryRef = useRef('');
   const notesParagraphRef = useRef<HTMLParagraphElement>(null);
   const summaryParagraphRef = useRef<HTMLParagraphElement>(null);
-  const [customQuery, setCustomQuery] = useState('Highlight new facts, examples, formulas and definitions presented in the last few minutes of the lecture. Then, write the top 5 takeaways from the summary.'); // query for custom notes
+  const [customQuery, setCustomQuery] = useState(''); // query for custom notes
   const [displaySummary, setDisplaySummary] = useState(''); // display summary of transcript [in progress]
   const [displayNotes, setDisplayNotes] = useState(''); // display notes from custom interactions
   const [displayTranscript, setDisplayTranscript] = useState('');
@@ -50,8 +53,6 @@ export default function Home() {
   const shouldGenerateFinal = useRef(false);
 
   const [lectureStartTime, setLectureStartTime] = useState<number | null>(null);
-  const second = 1000;
-  const minute = 60 * second;
   
   const [topic, setTopic] = useState('');
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
@@ -438,6 +439,14 @@ export default function Home() {
     setTopic('intermediate macroeconomics');
   }
 
+  function handleDefaultCustomQuery() {
+    if (isGenerating.current) {
+      console.log('Notes are being generated. try again later.');
+      return
+    }
+    setCustomQuery('Highlight new facts, examples, formulas and definitions presented in the last few minutes of the lecture. Then, write the top 5 takeaways from the summary.');
+  }
+
   return (
     <div className={styles.mainContainer}>
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
@@ -494,12 +503,15 @@ export default function Home() {
               style={{flex: 1}}
             />
             <textarea 
-              placeholder='Enter takeaways question/instruction here'
+              placeholder='Enter custom question/instruction here'
               value={customQuery}
               onChange={handleQueryInputChange}
               disabled={isGenerating.current}
               style={{flex: 3}}
             />
+            <div className={styles.bottomLeftTextButton}>
+              <FontAwesomeIcon icon={faArrowRotateForward} onClick={handleDefaultCustomQuery}/>
+            </div>
           </div>
         </div>
       </main>
@@ -532,8 +544,9 @@ export default function Home() {
 
 
 // TODO:
-// 4. deepgram + custom vocab
+// should display real time and lecture start time?
 // 5. toast notifications 
+// 5. re org the code!!
 // 5. status bar + spinnig gear + error toasts
 // 6. multiple chatGPT experts? (fact extraction, high level summary, term correction)
 // 7. user test 

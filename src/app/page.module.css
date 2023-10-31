@@ -84,6 +84,20 @@
   resize: none;
 }
 
+.textDisplay .bottomLeftTextButton {
+  position: absolute;
+  text-decoration: underline;
+  bottom: 1rem;
+  right: 1.5rem;
+  cursor: pointer;
+  font-weight: 100;
+  opacity: 0.8;
+}
+
+.textDisplay .bottomLeftTextButton:hover {
+  opacity: 0.5;
+}
+
 .textDisplay .button {
   position: absolute;
   top: 2.5rem;

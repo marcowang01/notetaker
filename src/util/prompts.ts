@@ -71,15 +71,15 @@ const finalNoteUserPrompt = (summary: string, topic: string) => {
 // for generating answers to questions on the fly based on the existing summary
 const customUserPrompt = (summary: string, topic: string, query: string) => {
   return `
-  Based on the summary for a lecture on the topic of ${topic}, you are to answer the following question: 
+  Act as an expert in the area of ${topic}.
+  Based on the summary for a lecture on the topic of ${topic}, you are to respond to the following request: 
   "${query}"
   ------------
   lecture summary:
   ${summary}
   ------------
   Use the summary provided to craft a concise and accurate response to the question. 
-  If the answer isn't present in the summary, respond with: "Answer not found in the summary. As an expert in ${topic}, I will provide my own answer." 
-  unless instructed otherwise, keep your response concise and directly related to the query.
+  Keep your response concise and directly related to the query.
 
   Take a deep breath, think about this step by step and make sure you get it right.
 
@@ -90,7 +90,7 @@ const customUserPrompt = (summary: string, topic: string, query: string) => {
 const customSystemPrompt = () => {
   return `You will receive a query based on an existing summary of a live lecture. 
   Your task is to generate concise and accurate answers based on the provided summary. 
-  Unless instructed otherwise, ensure that your response is directly related to the query and uses information only from the summary.`;
+  Unless instructed otherwise, ensure that your response is directly related to the query and uses information from the summary.`;
 }
 
 export {

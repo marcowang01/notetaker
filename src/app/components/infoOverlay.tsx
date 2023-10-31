@@ -5,7 +5,7 @@ import styles from './infoOverlay.module.css'
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight, faArrowRotateForward } from '@fortawesome/free-solid-svg-icons';
 
 interface TutorialOverlayProps {
   show: boolean;
@@ -24,6 +24,7 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
     "Generate custom answer using GPT-3.5": faWandMagic,
     "Generate final notes using GPT-4": faWandMagicSparkles,
     "Continue generating final notes": faHandPointRight,
+    "Use default question": faArrowRotateForward,
     "Generate Debug Transcipt": faVialCircleCheck,
   }
 
