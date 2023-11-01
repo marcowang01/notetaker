@@ -5,7 +5,7 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward, faGear } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
@@ -57,6 +57,7 @@ export default function Home() {
   
   const [topic, setTopic] = useState('');
   const [customQuery, setCustomQuery] = useState(''); // query for custom notes
+  const [status, setStatus] = useState('idle'); // status of the entire app
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
 
   const { data: session } = useSession({
@@ -81,13 +82,15 @@ export default function Home() {
   const { messages: customMessages, append: customAppend } = useCustomChat({
     systemPrompt: customSystemPrompt(),
     onFinish: onCustomNotesFinish,
-    onError: onError
+    onError: onError,
+    model: 'gpt-4'
   }) 
   
   const { messages: finalNoteMessages, append: finalNoteAppend } = useCustomChat({
     systemPrompt: finalNoteSystemPrompt(),
     onFinish: onFinalNotesFinish,
-    onError: onError
+    onError: onError,
+    model: 'gpt-4'
   })
 
   // update the transcript displayed on the page on detecting new speech
@@ -163,11 +166,6 @@ export default function Home() {
   // set lecture start time
   useEffect(() => {
     console.log(`isListening: ${isListening}`);
-    if (isListening) {
-      toast.success('speech recognition started.');
-    } else {
-      toast.success('speech recognition stopped.');
-    }
 
     // generate the running summary on interval
     if (isListening && lectureStartTime === null) {
@@ -182,6 +180,8 @@ export default function Home() {
         }
       });
     }
+
+    setStatus(getCurrentState());
   }, [isListening]);
 
   // auto scroll to bottom of transcript and notes
@@ -216,6 +216,7 @@ export default function Home() {
     if (browserSupportsSpeechRecognition) {
       SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
       console.log('Speech recognition started.')
+      toast.success('speech recognition started.');
       return true
     } else {
       console.log("Error: Browser doesn't support speech recognition.")
@@ -227,6 +228,7 @@ export default function Home() {
   const stopListening = () => {
     SpeechRecognition.stopListening()
     console.log('Speech recognition stopped.')
+    toast.success('speech recognition stopped.');
     return false
   }
 
@@ -333,6 +335,7 @@ export default function Home() {
 
     if (!isGenerating.current) {
       isGenerating.current = true;
+      setStatus(getCurrentState());
       console.log('Generating summary...');
 
       const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
@@ -360,6 +363,7 @@ export default function Home() {
       return 
     }
     isGenerating.current = true;
+    setStatus(getCurrentState());
     console.log('Generating custom notes...');
     // then generate notes
     const newMessage : CreateMessage = {
@@ -377,6 +381,7 @@ export default function Home() {
       return 
     }
     isGenerating.current = true;
+    setStatus(getCurrentState());
     console.log('Generating final notes...');
     // then generate notes
     const newMessage : CreateMessage = {
@@ -394,6 +399,7 @@ export default function Home() {
       return 
     }
     isGenerating.current = true;
+    setStatus(getCurrentState());
     console.log('Continuing final notes...');
     // then generate notes
     const newMessage : CreateMessage = {
@@ -407,6 +413,7 @@ export default function Home() {
   function onSummaryFinish(message: Message) {
     console.log('Sumamry generation finished with message: ', message);
     isGenerating.current = false;
+    setStatus(getCurrentState());
 
     if (shouldGenerateCustom.current) {
       shouldGenerateCustom.current = false;
@@ -420,6 +427,7 @@ export default function Home() {
   function onCustomNotesFinish(message: Message) {
     console.log('Custom generation finished with message: ', message);
     isGenerating.current = false;
+    setStatus(getCurrentState());
     shouldGenerateCustom.current = false;
   }
 
@@ -427,8 +435,18 @@ export default function Home() {
     console.log('Final note generation finished with message: ', message);
     isGenerating.current = false;
     shouldGenerateFinal.current = false;
+    setStatus(getCurrentState());
   }
 
+  function getCurrentState() {
+    if (isGenerating.current) {
+      return 'generating';
+    } else if (isListening) {
+      return 'listening';
+    } else {
+      return 'idle';
+    }
+  }
 
   function handleGenerateTestTranscript() {
     if (isGenerating.current) {
@@ -456,6 +474,9 @@ export default function Home() {
       <Toaster />
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
+        <div className={`${styles.navItem}`}>
+          <FontAwesomeIcon icon={faGear} style={{marginRight: '5px'}} spin={status === 'generating'}/> {status}{status !== 'idle' && '...'}
+        </div>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
           <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
