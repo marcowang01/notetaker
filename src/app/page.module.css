@@ -71,7 +71,7 @@
   line-height: 1.6;
 }
 
-.textDisplay textarea {
+.textDisplay .textInput {
   padding: 1rem 1rem;
   margin: 0.5rem 1rem 0.5rem 0;
   background-color: rgba(var(--callout-rgb), 0.5);
@@ -82,6 +82,7 @@
   white-space: pre-line;
   line-height: 1.6;
   resize: none;
+  font-family: var(--font-mono);
 }
 
 .textDisplay .bottomLeftTextButton {

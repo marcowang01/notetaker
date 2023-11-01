@@ -5,11 +5,12 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
 import { testEconTranscript, testShortTranscript } from '../util/testTranscripts'
+import toast, { Toaster } from 'react-hot-toast';
 import {
   summarySystemPrompt,
   summaryUserPrompt,
@@ -52,10 +53,10 @@ export default function Home() {
   const isGenerating = useRef(false);
   const shouldGenerateCustom = useRef(false);
   const shouldGenerateFinal = useRef(false);
+
   
   const [topic, setTopic] = useState('');
   const [customQuery, setCustomQuery] = useState(''); // query for custom notes
-  const [status, setStatus] = useState(''); // status of the entire app
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
 
   const { data: session } = useSession({
@@ -67,6 +68,7 @@ export default function Home() {
 
   const onError = (err: Error) => {
     console.log('Chat generation error: ', err);
+    toast.error('open ai api error. chat generation failed.');
     isGenerating.current = false;
   }
 
@@ -79,15 +81,13 @@ export default function Home() {
   const { messages: customMessages, append: customAppend } = useCustomChat({
     systemPrompt: customSystemPrompt(),
     onFinish: onCustomNotesFinish,
-    onError: onError,
-    model: 'gpt-4'
+    onError: onError
   }) 
   
   const { messages: finalNoteMessages, append: finalNoteAppend } = useCustomChat({
     systemPrompt: finalNoteSystemPrompt(),
     onFinish: onFinalNotesFinish,
-    onError: onError,
-    model: 'gpt-4'
+    onError: onError
   })
 
   // update the transcript displayed on the page on detecting new speech
@@ -163,6 +163,11 @@ export default function Home() {
   // set lecture start time
   useEffect(() => {
     console.log(`isListening: ${isListening}`);
+    if (isListening) {
+      toast.success('speech recognition started.');
+    } else {
+      toast.success('speech recognition stopped.');
+    }
 
     // generate the running summary on interval
     if (isListening && lectureStartTime === null) {
@@ -177,8 +182,6 @@ export default function Home() {
         }
       });
     }
-
-    setStatus(getCurrentState());
   }, [isListening]);
 
   // auto scroll to bottom of transcript and notes
@@ -205,7 +208,8 @@ export default function Home() {
   const startListening = () => {
     // checks if topic is empty
     if (topic.length === 0) {
-      console.log("Err: Topic is empty.")
+      console.log("Error: Topic is empty.")
+      toast.error('Enter a topic. failed to start.');
       return false
     }
     // checks if browser supports speech recognition
@@ -214,7 +218,8 @@ export default function Home() {
       console.log('Speech recognition started.')
       return true
     } else {
-      console.log("Err: Browser doesn't support speech recognition.")
+      console.log("Error: Browser doesn't support speech recognition.")
+      toast.error('browser does not support speech recognition.');
       return false
     }
   }
@@ -238,11 +243,12 @@ export default function Home() {
       console.log('Content copied to clipboard successfully!');
     }, function(err) {
       console.error('Could not copy content: ', err);
+      toast.error('copy failed. try again.');
     });
   }
 
   // Handler for input changes
-  const handleTopicInputChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+  const handleTopicInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setTopic(e.target.value);
   };
 
@@ -253,14 +259,17 @@ export default function Home() {
   const handleGenerateCustom = () => {
     if (topic.length === 0) {
       console.log("Err: Topic is empty.")
+      toast.error('Enter a topic. cannot generate response.');
       return 
     }
     if (customQuery.length === 0) {
       console.log("Err: Query is empty.")
+      toast.error('enter a query. cannot generate response.');
       return 
     }
     if (transcriptRef.current.length === 0) {
       console.log("Err: transcript is empty.")
+      toast.error('no transcript detected. cannot generate response.');
       return 
     }
 
@@ -274,10 +283,12 @@ export default function Home() {
   const handleGenerateFinal = () => {
     if (topic.length === 0) {
       console.log("Err: Topic is empty.")
+      toast.error('Enter a topic. cannot generate notes.');
       return 
     }
     if (transcriptRef.current.length === 0) {
       console.log("Err: transcript is empty.")
+      toast.error('no transcript detected. cannot generate notes.');
       return 
     }
 
@@ -291,10 +302,12 @@ export default function Home() {
   const handleContinueFinal = () => {
     if (topic.length === 0) {
       console.log("Err: Topic is empty.")
+      toast.error('Enter a topic. cannot continue notes.');
       return 
     }
     if (notesRef.current.length === 0) {
       console.log("Err: Notes is empty.")
+      toast.error('no notes detected. cannot continue notes.');
       return 
     }
 
@@ -320,8 +333,6 @@ export default function Home() {
 
     if (!isGenerating.current) {
       isGenerating.current = true;
-      setStatus(getCurrentState());
-
       console.log('Generating summary...');
 
       const partialTranscript = transcriptRef.current.slice(transcriptIndexRef.current);
@@ -345,11 +356,10 @@ export default function Home() {
   function generateCustomNotes() {
     if (isGenerating.current) {
       console.log('Notes are already being generated.');
+      toast.error('Currently already generating text. try again later.');
       return 
     }
     isGenerating.current = true;
-    setStatus(getCurrentState());
-
     console.log('Generating custom notes...');
     // then generate notes
     const newMessage : CreateMessage = {
@@ -363,11 +373,10 @@ export default function Home() {
   function generateFinalNotes() {
     if (isGenerating.current) {
       console.log('Notes are already being generated.');
+      toast.error('Currently already generating text. try again later.');
       return 
     }
     isGenerating.current = true;
-    setStatus(getCurrentState());
-
     console.log('Generating final notes...');
     // then generate notes
     const newMessage : CreateMessage = {
@@ -381,11 +390,10 @@ export default function Home() {
   function continueFinalNotes() {
     if (isGenerating.current) {
       console.log('Notes are already being generated.');
+      toast.error('Currently already generating text. try again later.');
       return 
     }
     isGenerating.current = true;
-    setStatus(getCurrentState());
-
     console.log('Continuing final notes...');
     // then generate notes
     const newMessage : CreateMessage = {
@@ -399,7 +407,6 @@ export default function Home() {
   function onSummaryFinish(message: Message) {
     console.log('Sumamry generation finished with message: ', message);
     isGenerating.current = false;
-    setStatus(getCurrentState());
 
     if (shouldGenerateCustom.current) {
       shouldGenerateCustom.current = false;
@@ -413,31 +420,20 @@ export default function Home() {
   function onCustomNotesFinish(message: Message) {
     console.log('Custom generation finished with message: ', message);
     isGenerating.current = false;
-    setStatus(getCurrentState());
     shouldGenerateCustom.current = false;
   }
 
   function onFinalNotesFinish(message: Message) {
     console.log('Final note generation finished with message: ', message);
     isGenerating.current = false;
-    setStatus(getCurrentState());
     shouldGenerateFinal.current = false;
-  }
-
-  function getCurrentState() {
-    if (isGenerating.current) {
-      return 'generating';
-    } else if (isListening) {
-      return 'listening';
-    } else {
-      return 'idle';
-    }
   }
 
 
   function handleGenerateTestTranscript() {
     if (isGenerating.current) {
       console.log('Notes are already being generated.');
+      toast.error('Currently already generating text. try again later.');
       return 
     }
     // transcriptRef.current = testEconTranscript();
@@ -457,11 +453,9 @@ export default function Home() {
 
   return (
     <div className={styles.mainContainer}>
+      <Toaster />
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
-        <div className={`${styles.navItem}`}>
-          <FontAwesomeIcon icon={faGear} style={{marginRight: '5px'}} spin={status === 'generating'}/> {status}{status !== 'idle' && '...'}
-        </div>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
           <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
@@ -506,7 +500,8 @@ export default function Home() {
           </div>
           <div className={styles.textDisplay} style={{flex: 1}}> 
             User Inputs:
-            <textarea 
+            <input 
+              className={styles.textInput}
               placeholder='Enter topic here'
               value={topic}
               onChange={handleTopicInputChange}
@@ -514,6 +509,7 @@ export default function Home() {
               style={{flex: 1}}
             />
             <textarea 
+              className={styles.textInput}
               placeholder='Enter custom question/instruction here'
               value={customQuery}
               onChange={handleQueryInputChange}
@@ -565,10 +561,12 @@ export default function Home() {
 
 // 7. mvp success --> refactor code + use shadcn ui
 
+// key input:
+// - allow users to input GPT-4 key
+
 // sr improvements:
 // - use deepgram (less accurate from testing)
 // - generate vocab list from input topic
-// - use chatgpt to generate low confidence sr words using guidance
 
 // notes improvements:
 // llamaindex: https://www.llamaindex.ai/

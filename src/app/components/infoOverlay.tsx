@@ -16,16 +16,16 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
   if (!show) return null;
 
   const infoItems: Record<string, IconDefinition> = {
-    "Open This Menu": faCircleInfo,
-    "Link to sign out page": faEnvelope,
     "Copy Text in text box": faCopy,
     "Start/Pause Speech Recognition": faPlay,
-    "Shows most recent live transcript": faEarListen,
-    "Generate custom answer using GPT-3.5": faWandMagic,
+    "Generate custom answer using GPT-4": faWandMagic,
     "Generate final notes using GPT-4": faWandMagicSparkles,
     "Continue generating final notes": faHandPointRight,
-    "Use default question": faArrowRotateForward,
     "Generate Debug Transcipt": faVialCircleCheck,
+    "Shows most recent live transcript": faEarListen,
+    "Open This Menu": faCircleInfo,
+    "Link to sign out page": faEnvelope,
+    "Use default custom instruction": faArrowRotateForward,
   }
 
   const handleClose = () => {
