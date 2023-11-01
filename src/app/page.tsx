@@ -143,7 +143,7 @@ export default function Home() {
         const formattedTime = `(${hours}:${minutes})`;
   
         // Return the formatted timestamp followed by the message content
-        return `${formattedTime} ${msg.content}`;
+        return `${formattedTime}\n${msg.content}`;
       }
       return msg.content;  // Return the message content alone if createdAt is not defined
     }).join('\n');
