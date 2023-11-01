@@ -5,7 +5,7 @@ import styles from './infoOverlay.module.css'
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight, faArrowRotateForward, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight, faArrowRotateForward, faGear, faRobot } from '@fortawesome/free-solid-svg-icons';
 
 interface TutorialOverlayProps {
   show: boolean;
@@ -16,22 +16,23 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
   if (!show) return null;
 
   const bottomItems: Record<string, IconDefinition> = {
-    "Start/Pause Speech Recognition": faPlay,
-    "Generate custom answer using GPT-4": faWandMagic,
-    "Generate final notes using GPT-4": faWandMagicSparkles,
+    "Start/Pause speech recognition": faPlay,
+    "Generate response for custom instruction": faWandMagic,
+    "Generate complete lecture notes": faWandMagicSparkles,
     "Continue generating final notes": faHandPointRight,
-    "Generate Debug Transcipt": faVialCircleCheck,
+    "Generate debug transcipt": faVialCircleCheck,
     "Shows most recent live transcript": faEarListen,
   }
 
   const topItems: Record<string, IconDefinition> = {
     "Shows current status": faGear,
-    "Open This Menu": faCircleInfo,
-    "Link to sign out page": faEnvelope,
+    "Toggle model for custom instruction/notes": faRobot,
+    "Open this menu": faCircleInfo,
+    "Link to sign Out page": faEnvelope,
   }
 
   const otherItems: Record<string, IconDefinition> = {
-    "Copy Text in text box": faCopy,
+    "Copy text in text box": faCopy,
     "Use default custom instruction": faArrowRotateForward,
   }
 

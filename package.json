@@ -23,6 +23,7 @@
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
     "react-speech-recognition": "^3.10.0",
+    "react-tooltip": "^5.21.6",
     "regenerator-runtime": "^0.14.0",
     "zustand": "^4.4.5"
   },

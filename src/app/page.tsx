@@ -5,7 +5,7 @@ import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Message, CreateMessage } from 'ai/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faEnvelope, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faHandPointRight, faArrowRotateForward, faGear, faRobot } from '@fortawesome/free-solid-svg-icons';
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link';
@@ -53,12 +53,12 @@ export default function Home() {
   const isGenerating = useRef(false);
   const shouldGenerateCustom = useRef(false);
   const shouldGenerateFinal = useRef(false);
-
   
   const [topic, setTopic] = useState('');
   const [customQuery, setCustomQuery] = useState(''); // query for custom notes
   const [status, setStatus] = useState('idle'); // status of the entire app
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
+  const [model, setModel] = useState('gpt-4'); // model to use for generating custom + notes
 
   const { data: session } = useSession({
     required: true,
@@ -231,11 +231,19 @@ export default function Home() {
     return false
   }
 
-  const handleStartStop = () => {
+  const toggleListening = () => {
     if (isListening) {
       setIsListening(stopListening())
     } else {
       setIsListening(startListening())
+    }
+  }
+
+  const toggleModel = () => {
+    if (model === 'gpt-3.5-turbo-16k') {
+      setModel('gpt-4');
+    } else {
+      setModel('gpt-3.5-turbo-16k');
     }
   }
 
@@ -370,7 +378,7 @@ export default function Home() {
       content: customUserPrompt(summaryRef.current, topic, customQuery)
     };
     console.log('New custom notes message prompt: ', newMessage)
-    customAppend(newMessage, 'gpt-4');
+    customAppend(newMessage, model);
   }
 
   function generateFinalNotes() {
@@ -388,7 +396,7 @@ export default function Home() {
       content: finalNoteUserPrompt(summaryRef.current, topic)
     };
     console.log('New final notes message prompt: ', newMessage)
-    finalNoteAppend(newMessage, 'gpt-4');
+    finalNoteAppend(newMessage, model);
   }
 
   function continueFinalNotes() {
@@ -406,7 +414,7 @@ export default function Home() {
       content: 'continue'
     };
     console.log('New final notes continue message prompt: ', newMessage)
-    finalNoteAppend(newMessage, 'gpt-4');
+    finalNoteAppend(newMessage, model);
   }
 
   function onSummaryFinish(message: Message) {
@@ -476,6 +484,9 @@ export default function Home() {
         <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faGear} style={{marginRight: '5px'}} spin={status === 'generating'}/> {status}{status !== 'idle' && '...'}
         </div>
+        <div className={`${styles.navItem} ${styles.textButton}`} onClick={toggleModel}>
+          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === 'gpt-4' ? 4 : 3}
+        </div>
         <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
           <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
@@ -543,7 +554,7 @@ export default function Home() {
         </div>
       </main>
       <div className={styles.navbar}>
-        <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleStartStop}>
+        <div className={`${styles.navItem} ${styles.textButton}`} onClick={toggleListening}>
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
         </div>
         <div className={`${styles.navItem} ${styles.textButton}`}>
