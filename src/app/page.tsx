@@ -521,7 +521,7 @@ export default function Home() {
         </div>
       </div>
       <main className={styles.main}>
-        <div className={styles.LRContainer}>
+        <div className={styles.LRContainer} style={{flex: '1'}}>
           <div className={styles.textDisplay}>
             Transcript:
             <div onClick={() => handleCopy(transcriptRef.current)} className={styles.button}>
@@ -541,7 +541,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-        <div className={styles.LRContainer}>
+        <div className={styles.LRContainer} style={{flex: 2}}>
           <div className={styles.textDisplay} style={{flex: 2}}> 
             Notes:
             <div onClick={() => handleCopy(displayNotes)} className={styles.button}>
