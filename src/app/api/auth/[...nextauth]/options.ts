@@ -3,7 +3,9 @@ import GoogleProvider from "next-auth/providers/google";
 
 const validEmails = [
   'stanleywang2999@gmail.com',
-  'hellsegga.site@gmail.com'
+  'hellsegga.site@gmail.com',
+  'lilithcbc@gmail.com',
+  'tommy2027l@gmail.com'
 ]
 
 export const authOptions: NextAuthOptions = {

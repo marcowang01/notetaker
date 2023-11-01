@@ -487,11 +487,7 @@ export default function Home() {
       <Tooltip id="tt" />
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
-        <div 
-          className={`${styles.navItem}`} 
-          data-tooltip-id="tt" 
-          data-tooltip-content="status of the app"
-        >
+        <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faGear} style={{marginRight: '5px'}} spin={status === 'generating'}/> {status}{status !== 'idle' && '...'}
         </div>
         <div 
@@ -505,15 +501,13 @@ export default function Home() {
         <div 
           className={`${styles.navItem} ${styles.textButton}`} 
           onClick={handleInfoOverlay}
-          data-tooltip-id="tt"
-          data-tooltip-content="tutorial guide"
         >
           <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
         <div
           className={`${styles.navItem} ${styles.textButton}`}
           data-tooltip-id="tt" 
-          data-tooltip-content="go to sign out page"
+          data-tooltip-content="sign out"
         >
           {session?.user?.email && 
             <Link href="/api/auth/signout">
@@ -557,7 +551,7 @@ export default function Home() {
             User Inputs:
             <input 
               className={styles.textInput}
-              placeholder='Enter topic here'
+              placeholder='Enter topic of lecture here'
               value={topic}
               onChange={handleTopicInputChange}
               disabled={isListening || isGenerating.current}
@@ -571,7 +565,11 @@ export default function Home() {
               disabled={isGenerating.current}
               style={{flex: 3}}
             />
-            <div className={styles.bottomLeftTextButton}>
+            <div 
+              className={styles.bottomLeftTextButton}
+              data-tooltip-id="tt" 
+              data-tooltip-content="use default custom instruction"  
+            >
               <FontAwesomeIcon icon={faArrowRotateForward} onClick={handleDefaultCustomQuery}/>
             </div>
           </div>
@@ -589,7 +587,7 @@ export default function Home() {
         <div 
           className={`${styles.navItem} ${styles.textButton}`}
           data-tooltip-id="tt" 
-          data-tooltip-content="answer custom question/instruction"  
+          data-tooltip-content="generate response for question/instruction"  
         >
           <FontAwesomeIcon icon={faWandMagic} onClick={handleGenerateCustom}/>
         </div>
@@ -621,11 +619,7 @@ export default function Home() {
         >
           {transcriptRef.current.length - transcriptIndexRef.current} / {transcriptChunkLength}
         </div>
-        <div 
-          className={`${styles.navItem}`}
-          data-tooltip-id="tt"
-          data-tooltip-content="live transcript"
-        >
+        <div className={`${styles.navItem}`}>
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
         </div>
       </div>
