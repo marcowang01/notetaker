@@ -12,9 +12,7 @@ const testPhysicsTranscript = () => {
 }
 
 const testShortTranscript = () => {
-  return `
-    Hi, my name is Marco. I am a software engineer. This is a notetaking project.
-    This app relies on gpt-3.5 and gpt-4. It will be launched in a few weeks.
+  return `Hi, my name is Marco. I am a software engineer. This is a notetaking project. This app relies on gpt-3.5 and gpt-4. It will be launched soon.
   `
 }
 

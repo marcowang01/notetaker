@@ -71,6 +71,7 @@ export default function Home() {
     console.log('Chat generation error: ', err);
     toast.error('open ai api error. chat generation failed.');
     isGenerating.current = false;
+    setStatus(getCurrentState());
   }
 
   const { messages: summaryMessages, append: summaryAppend } = useCustomChat({
@@ -83,14 +84,12 @@ export default function Home() {
     systemPrompt: customSystemPrompt(),
     onFinish: onCustomNotesFinish,
     onError: onError,
-    model: 'gpt-4'
   }) 
   
   const { messages: finalNoteMessages, append: finalNoteAppend } = useCustomChat({
     systemPrompt: finalNoteSystemPrompt(),
     onFinish: onFinalNotesFinish,
     onError: onError,
-    model: 'gpt-4'
   })
 
   // update the transcript displayed on the page on detecting new speech
@@ -349,7 +348,7 @@ export default function Home() {
 
       // append to chat
       console.log('New summary message prompt: ', newMessage)
-      summaryAppend(newMessage);
+      summaryAppend(newMessage, 'gpt-3.5-turbo-16k');
 
       return true
     }
@@ -371,7 +370,7 @@ export default function Home() {
       content: customUserPrompt(summaryRef.current, topic, customQuery)
     };
     console.log('New custom notes message prompt: ', newMessage)
-    customAppend(newMessage);
+    customAppend(newMessage, 'gpt-4');
   }
 
   function generateFinalNotes() {
@@ -389,7 +388,7 @@ export default function Home() {
       content: finalNoteUserPrompt(summaryRef.current, topic)
     };
     console.log('New final notes message prompt: ', newMessage)
-    finalNoteAppend(newMessage);
+    finalNoteAppend(newMessage, 'gpt-4');
   }
 
   function continueFinalNotes() {
@@ -407,7 +406,7 @@ export default function Home() {
       content: 'continue'
     };
     console.log('New final notes continue message prompt: ', newMessage)
-    finalNoteAppend(newMessage);
+    finalNoteAppend(newMessage, 'gpt-4');
   }
 
   function onSummaryFinish(message: Message) {
@@ -434,8 +433,8 @@ export default function Home() {
   function onFinalNotesFinish(message: Message) {
     console.log('Final note generation finished with message: ', message);
     isGenerating.current = false;
-    shouldGenerateFinal.current = false;
     setStatus(getCurrentState());
+    shouldGenerateFinal.current = false;
   }
 
   function getCurrentState() {

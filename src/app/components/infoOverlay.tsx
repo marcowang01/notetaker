@@ -5,7 +5,7 @@ import styles from './infoOverlay.module.css'
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight, faArrowRotateForward } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faPlay, faPause, faEarListen, faWandMagic, faWandMagicSparkles, faVialCircleCheck, faCircleInfo, faEnvelope, faHandPointRight, faArrowRotateForward, faGear } from '@fortawesome/free-solid-svg-icons';
 
 interface TutorialOverlayProps {
   show: boolean;
@@ -15,16 +15,23 @@ interface TutorialOverlayProps {
 const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
   if (!show) return null;
 
-  const infoItems: Record<string, IconDefinition> = {
-    "Copy Text in text box": faCopy,
+  const bottomItems: Record<string, IconDefinition> = {
     "Start/Pause Speech Recognition": faPlay,
     "Generate custom answer using GPT-4": faWandMagic,
     "Generate final notes using GPT-4": faWandMagicSparkles,
     "Continue generating final notes": faHandPointRight,
     "Generate Debug Transcipt": faVialCircleCheck,
     "Shows most recent live transcript": faEarListen,
+  }
+
+  const topItems: Record<string, IconDefinition> = {
+    "Shows current status": faGear,
     "Open This Menu": faCircleInfo,
     "Link to sign out page": faEnvelope,
+  }
+
+  const otherItems: Record<string, IconDefinition> = {
+    "Copy Text in text box": faCopy,
     "Use default custom instruction": faArrowRotateForward,
   }
 
@@ -47,7 +54,18 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
         <div style={{opacity: "0.7", fontStyle: "italic"}}>
           Click anywhere to close
         </div>
-        {Object.keys(infoItems).map((key) => <InfoItem key={key} icon={infoItems[key]} text={key} />)}
+        <div className={styles.infoTitle}>
+          Bottom Action Bar
+        </div>
+        {Object.keys(bottomItems).map((key) => <InfoItem key={key} icon={bottomItems[key]} text={key} />)}
+        <div className={styles.infoTitle}>
+          Top Nav Bar
+        </div>
+        {Object.keys(topItems).map((key) => <InfoItem key={key} icon={topItems[key]} text={key} />)}
+        <div className={styles.infoTitle}>
+          Other
+        </div>
+        {Object.keys(otherItems).map((key) => <InfoItem key={key} icon={otherItems[key]} text={key} />)}
       </div>
     </div>
   );

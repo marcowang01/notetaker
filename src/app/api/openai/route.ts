@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   // Extract the `messages` from the body of the request
   const { messages, model } = await req.json()
 
-  // console.log("new messsage")
+  // console.log(model)
   // console.log(messages[messages.length - 1])
  
   // Request the OpenAI API for the response based on the prompt

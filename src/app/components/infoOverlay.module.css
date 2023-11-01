@@ -35,4 +35,12 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  padding-left: 10px;
+}
+
+.infoTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  margin-top: 10px;
 }

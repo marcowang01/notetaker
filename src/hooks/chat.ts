@@ -1,4 +1,4 @@
-import { useChat, Message } from 'ai/react';
+import { useChat, Message, CreateMessage } from 'ai/react';
 
 type CustomChatOptions = {
   systemPrompt: string;
@@ -7,8 +7,9 @@ type CustomChatOptions = {
   model?: string;
 };
 
+// custom hook to create a new chat with a system prompt
 function useCustomChat(options: CustomChatOptions) {
-  const { systemPrompt, onFinish, onError, model } = options;
+  const { systemPrompt, onFinish, onError } = options;
 
   const { messages, append } = useChat({
     api: '/api/openai',
@@ -21,14 +22,26 @@ function useCustomChat(options: CustomChatOptions) {
     ],
     onFinish: onFinish,
     onError: onError,
-    body: {
-      model: model,
-    },
   });
+
 
   return {
     messages,
-    append,
+    append: customAppend(append),
+  };
+}
+
+// higher order function to append messages with model as a request option
+function customAppend(append: (message: CreateMessage, options?: any) => void) {
+  return function (message: CreateMessage, model?: string) {
+    const requestOptions = {
+      options: {
+        body: {
+          model: model,
+        }
+      }
+    };
+    append(message, requestOptions);
   };
 }
 
