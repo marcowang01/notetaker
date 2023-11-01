@@ -131,12 +131,27 @@ export default function Home() {
 
   // update the running summary on new messages from the assistant
   useEffect(() => {
-    const assistantMessages = summaryMessages.filter(msg => msg.role === 'assistant');
-    const summary = assistantMessages.map(msg => msg.content).join('\n');
+    const assistantMessages = summaryMessages.filter(msg => msg.role === 'assistant' && msg.createdAt);
+    
+    // add timestamp (HH:MM) before each message
+    const summary = assistantMessages.map(msg => {
+      // Ensure createdAt is defined before proceeding
+      if (msg.createdAt) {
+        const date = new Date(msg.createdAt);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const formattedTime = `(${hours}:${minutes})`;
+  
+        // Return the formatted timestamp followed by the message content
+        return `${formattedTime} ${msg.content}`;
+      }
+      return msg.content;  // Return the message content alone if createdAt is not defined
+    }).join('\n');
     
     summaryRef.current = summary;
     setDisplaySummary(summaryRef.current);
   }, [summaryMessages]);
+  
 
   // update the notes displayed on new messages from the assistant
   useEffect(() => {
