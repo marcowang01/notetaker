@@ -317,7 +317,9 @@ export default function Home() {
       toast.error('Enter a topic. cannot continue notes.');
       return 
     }
-    if (notesRef.current.length === 0) {
+    // check if final note messages contain any assistant messages
+    const assistantMessages = finalNoteMessages.filter(msg => msg.role === 'assistant');
+    if (assistantMessages.length === 0 || notesRef.current.length === 0) {
       console.log("Err: Notes is empty.")
       toast.error('no notes detected. cannot continue notes.');
       return 
