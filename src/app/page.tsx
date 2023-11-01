@@ -11,6 +11,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link';
 import { testEconTranscript, testShortTranscript } from '../util/testTranscripts'
 import toast, { Toaster } from 'react-hot-toast';
+import { Tooltip } from 'react-tooltip'
+import 'react-tooltip/dist/react-tooltip.css'
+
 import {
   summarySystemPrompt,
   summaryUserPrompt,
@@ -479,18 +482,37 @@ export default function Home() {
   return (
     <div className={styles.mainContainer}>
       <Toaster />
+      <Tooltip id="tt" />
       <InfoOverlay show={showInfoOverlay} onClose={handleCloseInfoOverlay}/>
       <div className={styles.navbar} style={{ justifyContent: "flex-end" }}>
-        <div className={`${styles.navItem}`}>
+        <div 
+          className={`${styles.navItem}`} 
+          data-tooltip-id="tt" 
+          data-tooltip-content="status of the app"
+        >
           <FontAwesomeIcon icon={faGear} style={{marginRight: '5px'}} spin={status === 'generating'}/> {status}{status !== 'idle' && '...'}
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`} onClick={toggleModel}>
-          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === 'gpt-4' ? 4 : 3}
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`}
+          onClick={toggleModel}
+          data-tooltip-id="tt" 
+          data-tooltip-content={model === 'gpt-4' ? "toggle to gpt-3.5-turbo-16k" : "toggle to gpt-4"}
+        >
+          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === 'gpt-4' ? 4 : 3.5}
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleInfoOverlay}>
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`} 
+          onClick={handleInfoOverlay}
+          data-tooltip-id="tt"
+          data-tooltip-content="tutorial guide"
+        >
           <FontAwesomeIcon icon={faCircleInfo} style={{marginRight: '5px'}}/> {` help`}
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`}>
+        <div
+          className={`${styles.navItem} ${styles.textButton}`}
+          data-tooltip-id="tt" 
+          data-tooltip-content="go to sign out page"
+        >
           {session?.user?.email && 
             <Link href="/api/auth/signout">
               <FontAwesomeIcon icon={faEnvelope} fixedWidth/> {` ${session?.user?.email}`}
@@ -554,25 +576,54 @@ export default function Home() {
         </div>
       </main>
       <div className={styles.navbar}>
-        <div className={`${styles.navItem} ${styles.textButton}`} onClick={toggleListening}>
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`} 
+          onClick={toggleListening}
+          data-tooltip-id="tt" 
+          data-tooltip-content={isListening ? "stop speech recognition" : "start speech recognition"}
+        >
           {isListening ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`}>
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`}
+          data-tooltip-id="tt" 
+          data-tooltip-content="answer custom question/instruction"  
+        >
           <FontAwesomeIcon icon={faWandMagic} onClick={handleGenerateCustom}/>
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`}>
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`}
+          data-tooltip-id="tt"
+          data-tooltip-content="generate full lecture notes"
+        >
           <FontAwesomeIcon icon={faWandMagicSparkles} onClick={handleGenerateFinal}/>
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`}>
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`}
+          data-tooltip-id="tt"
+          data-tooltip-content="continue unfinished full lecture notes"
+        >
           <FontAwesomeIcon icon={faHandPointRight} onClick={handleContinueFinal}/>
         </div>
-        <div className={`${styles.navItem} ${styles.textButton}`} onClick={handleGenerateTestTranscript}>
+        <div 
+          className={`${styles.navItem} ${styles.textButton}`} onClick={handleGenerateTestTranscript}
+          data-tooltip-id="tt"
+          data-tooltip-content="test transcript (debug)"
+        >
           <FontAwesomeIcon icon={faVialCircleCheck}/>
         </div>
-        <div className={`${styles.navItem}`}>
+        <div 
+          className={`${styles.navItem}`}
+          data-tooltip-id="tt"
+          data-tooltip-content="number of tokens until next summary (debug)"
+        >
           {transcriptRef.current.length - transcriptIndexRef.current} / {transcriptChunkLength}
         </div>
-        <div className={`${styles.navItem}`}>
+        <div 
+          className={`${styles.navItem}`}
+          data-tooltip-id="tt"
+          data-tooltip-content="live transcript"
+        >
           <FontAwesomeIcon icon={faEarListen} />{`: ...${transcript.slice(-50)}`}
         </div>
       </div>
@@ -626,3 +677,4 @@ export default function Home() {
 // - better state transitions between generation
 // - better testing pipeline and error handling
 // - use redux or zustand for state management
+// - fix logging?

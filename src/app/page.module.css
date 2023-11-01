@@ -196,6 +196,7 @@
   cursor: pointer;
   text-decoration: underline;
   opacity: 1;
+  user-select: none;
 }
 
 .textButton:hover {

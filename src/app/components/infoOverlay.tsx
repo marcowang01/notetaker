@@ -19,16 +19,16 @@ const InfoOverlay: React.FC<TutorialOverlayProps> = ({ show, onClose }) => {
     "Start/Pause speech recognition": faPlay,
     "Generate response for custom instruction": faWandMagic,
     "Generate complete lecture notes": faWandMagicSparkles,
-    "Continue generating final notes": faHandPointRight,
+    "Continue generating lecture notes": faHandPointRight,
     "Generate debug transcipt": faVialCircleCheck,
     "Shows most recent live transcript": faEarListen,
   }
 
   const topItems: Record<string, IconDefinition> = {
-    "Shows current status": faGear,
-    "Toggle model for custom instruction/notes": faRobot,
+    "Shows current status of the app": faGear,
+    "Toggle model for notes generation": faRobot,
     "Open this menu": faCircleInfo,
-    "Link to sign Out page": faEnvelope,
+    "Link to sign out page": faEnvelope,
   }
 
   const otherItems: Record<string, IconDefinition> = {
