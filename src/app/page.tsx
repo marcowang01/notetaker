@@ -34,8 +34,8 @@ export default function Home() {
   const second = 1000;
   const minute = 60 * second;
 
-  const transcriptBacktrackIndex = 400 * 4; // backtrack 300 tokens
-  const transcriptChunkLength = 1600 * 4; // 1.0k tokens per chunk
+  const transcriptBacktrackIndex = 300 * 4; // backtrack 300 tokens
+  const transcriptChunkLength = 1200 * 4; // 1.0k tokens per chunk
   const timeStampInterval = 30 * second; // 30 seconds in milliseconds
 
   const transcriptIndexRef = useRef(0);
@@ -259,7 +259,7 @@ export default function Home() {
 
   const toggleModel = () => {
     if (model === 'gpt-3.5-turbo-16k') {
-      setModel('gpt-4');
+      setModel('gpt-4-1106-preview');
     } else {
       setModel('gpt-3.5-turbo-16k');
     }
@@ -376,7 +376,8 @@ export default function Home() {
 
       // append to chat
       console.log('New summary message prompt: ', newMessage)
-      summaryAppend(newMessage, 'gpt-3.5-turbo-16k');
+      // summaryAppend(newMessage, 'gpt-3.5-turbo-16k');
+      summaryAppend(newMessage, model);
 
       return true
     }
@@ -644,10 +645,8 @@ export default function Home() {
 
 
 // TODO:
-// should display real time and lecture start time?
-// 5. toast notifications 
-// 5. status bar + spinnig gear + error toasts
-// 7. user test (download button)
+// 0. summary generation needs to be trimmed for last 10k tokens. 
+// 1. shadcn ui + connect with supabase
 
 // 6. use better model 
 // 7. multiple chatGPT experts? (fact extraction, high level summary, term correction)
@@ -669,6 +668,8 @@ export default function Home() {
 // use blank tokens for confusing parts (then use gpt4 to fill the gaps at the end)
 // modal, anyscale
 // error recovery. on error, the transcript index needs to be reset
+// langhcain for consecutive generations
+// generate study guide
 
 // user + content management:
 // - add database to store summary and store user sessions
@@ -682,6 +683,8 @@ export default function Home() {
 // - add toasts for notif
 // - better scroll bars
 // - add tooltips
+// - can change token interval for summary generation
+// - can change prompt
 
 // code improvements:
 // - refactor code into multiple files (navbar, text displays, etc.)
