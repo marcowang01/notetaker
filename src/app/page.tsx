@@ -34,8 +34,8 @@ export default function Home() {
   const second = 1000;
   const minute = 60 * second;
 
-  const transcriptBacktrackIndex = 300 * 4; // backtrack 300 tokens
-  const transcriptChunkLength = 1200 * 4; // 1.0k tokens per chunk
+  const transcriptBacktrackIndex = 1500 * 4; // backtrack 300 tokens
+  const transcriptChunkLength = 6000 * 4; // 1.0k tokens per chunk
   const timeStampInterval = 30 * second; // 30 seconds in milliseconds
 
   const transcriptIndexRef = useRef(0);
@@ -647,6 +647,8 @@ export default function Home() {
 // TODO:
 // 0. summary generation needs to be trimmed for last 10k tokens. 
 // 1. shadcn ui + connect with supabase
+// 2. adjust prompt to use entire transcript 
+// 3. use agents: formula and facts + summary and takeaways + term correction
 
 // 6. use better model 
 // 7. multiple chatGPT experts? (fact extraction, high level summary, term correction)
