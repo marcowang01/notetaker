@@ -61,7 +61,7 @@ export default function Home() {
   const [customQuery, setCustomQuery] = useState(''); // query for custom notes
   const [status, setStatus] = useState('idle'); // status of the entire app
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
-  const [model, setModel] = useState('gpt-4'); // model to use for generating custom + notes
+  const [model, setModel] = useState('gpt-4-1106-preview'); // model to use for generating custom + notes
 
   const { data: session } = useSession({
     required: true,
@@ -510,9 +510,9 @@ export default function Home() {
           className={`${styles.navItem} ${styles.textButton}`}
           onClick={toggleModel}
           data-tooltip-id="tt" 
-          data-tooltip-content={model === 'gpt-4' ? "toggle to gpt-3.5-turbo-16k" : "toggle to gpt-4"}
+          data-tooltip-content={model === 'gpt-4-1106-preview' ? "toggle to gpt-3.5-turbo-16k" : "toggle to gpt-4"}
         >
-          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === 'gpt-4' ? 4 : 3.5}
+          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === 'gpt-4-1106-preview' ? 4 : 3.5}
         </div>
         <div 
           className={`${styles.navItem} ${styles.textButton}`} 
