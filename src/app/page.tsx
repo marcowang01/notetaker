@@ -31,6 +31,9 @@ export default function Home() {
   const { transcript, finalTranscript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
 
+  const GPT4 = 'gpt-4-1106-preview';
+  const GPT3 = 'gpt-3.5-turbo-16k';
+
   const second = 1000;
   const minute = 60 * second;
 
@@ -61,7 +64,7 @@ export default function Home() {
   const [customQuery, setCustomQuery] = useState(''); // query for custom notes
   const [status, setStatus] = useState('idle'); // status of the entire app
   const [showInfoOverlay, setShowInfoOverlay] = useState(false);
-  const [model, setModel] = useState('gpt-4-1106-preview'); // model to use for generating custom + notes
+  const [model, setModel] = useState(GPT4); // model to use for generating custom + notes
 
   const { data: session } = useSession({
     required: true,
@@ -258,10 +261,12 @@ export default function Home() {
   }
 
   const toggleModel = () => {
-    if (model === 'gpt-3.5-turbo-16k') {
-      setModel('gpt-4-1106-preview');
+    if (model === GPT3) {
+      console.log('Switching to gpt-4-1106-preview');
+      setModel(GPT4);
     } else {
-      setModel('gpt-3.5-turbo-16k');
+      console.log('Switching to gpt-3.5-turbo-16k');
+      setModel(GPT3);
     }
   }
 
@@ -376,7 +381,7 @@ export default function Home() {
 
       // append to chat
       console.log('New summary message prompt: ', newMessage)
-      // summaryAppend(newMessage, 'gpt-3.5-turbo-16k');
+      // summaryAppend(newMessage, GPT3);
       summaryAppend(newMessage, model);
 
       return true
@@ -510,9 +515,9 @@ export default function Home() {
           className={`${styles.navItem} ${styles.textButton}`}
           onClick={toggleModel}
           data-tooltip-id="tt" 
-          data-tooltip-content={model === 'gpt-4-1106-preview' ? "toggle to gpt-3.5-turbo-16k" : "toggle to gpt-4"}
+          data-tooltip-content={model === GPT4 ? "toggle to gpt-3.5-turbo-16k" : "toggle to gpt-4-1106-preview"}
         >
-          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === 'gpt-4-1106-preview' ? 4 : 3.5}
+          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === GPT4 ? 4 : 3.5}
         </div>
         <div 
           className={`${styles.navItem} ${styles.textButton}`} 
