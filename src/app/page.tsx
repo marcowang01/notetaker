@@ -515,9 +515,9 @@ export default function Home() {
           className={`${styles.navItem} ${styles.textButton}`}
           onClick={toggleModel}
           data-tooltip-id="tt" 
-          data-tooltip-content={model === GPT4 ? "toggle to gpt-3.5-turbo-16k" : "toggle to gpt-4-1106-preview"}
+          data-tooltip-content={model === GPT4 ? `toggle to ${GPT3}` : `toggle to ${GPT4}`}
         >
-          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT-{model === GPT4 ? 4 : 3.5}
+          <FontAwesomeIcon icon={faRobot} style={{marginRight: '3px'}}/>GPT{model === GPT4 ? 4 : 3}
         </div>
         <div 
           className={`${styles.navItem} ${styles.textButton}`} 
