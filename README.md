@@ -53,7 +53,7 @@ yarn dev
 
 ## ☁️ Deploy
 
-`[Scribe](https://notetaker-git-master-marcowang01.vercel.app/)`
+[Deployed App](https://notetaker-git-master-marcowang01.vercel.app/)
 
 ## 📄 License
 
