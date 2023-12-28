@@ -32,7 +32,7 @@ export default function Home() {
   const [isListening, setIsListening] = useState(false);
 
   const GPT4 = 'gpt-4-1106-preview';
-  const GPT3 = 'gpt-3.5-turbo-16k';
+  const GPT3 = 'gpt-3.5-turbo-1106';
 
   const second = 1000;
   const minute = 60 * second;
@@ -650,10 +650,12 @@ export default function Home() {
 
 
 // TODO:
+// quick fixes: error recovery, disable summary generation, allow for topic to be changed unless generaing, tool tip for copying, reset default
 // 0. summary generation needs to be trimmed for last 10k tokens. 
 // 1. shadcn ui + connect with supabase
 // 2. adjust prompt to use entire transcript 
-// 3. use agents: formula and facts + summary and takeaways + term correction
+// 3. use agents: formula and facts + summary and takeaways + term correction, highlighter 
+//   3a. generate dictionary of terms. can click to expand
 
 // 6. use better model 
 // 7. multiple chatGPT experts? (fact extraction, high level summary, term correction)
