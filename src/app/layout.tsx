@@ -1,14 +1,16 @@
-import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import AuthProvider from './context/AuthProvider'
-
+import './globals.css'
+import Sidebar from '@/components/sidebar/sidebar'
+import SpeechBar from '@/components/topbar/speechBar'
+import { cn } from '@/lib/utils'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Notetaker',
-  description: 'notetaking web app',
+  title: 'Scribe',
+  description: 'AI Notes Generation and Rretrieval',
 }
 
 export default function RootLayout({
@@ -19,9 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <div className={cn("relative flex h-screen flex flex-row items-start justify-start overflow-hidden")}>
+          <SpeechBar />
+          <Sidebar />
+          <div className={cn("h-screen w-full flex flex-row justify-center items-center")}>
+            {children}
+          </div>
+        </div>
+        <Toaster />
       </body>
     </html>
   )
